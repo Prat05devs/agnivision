@@ -1,0 +1,24 @@
+# Native projects and generated build outputs are never needed by the API.
+android/
+ios/
+artifacts/
+node_modules/
+.expo/
+dist/
+web-build/
+
+# App-only assets, tests, and local development material.
+public/
+tests/
+scripts/
+*.apk
+*.aab
+*.zip
+*.pdf
+*.docx
+
+# Local credentials and Vercel metadata must never be uploaded.
+.env
+.env.*
+.vercel/
+.git/
