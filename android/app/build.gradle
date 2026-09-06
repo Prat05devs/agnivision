@@ -92,8 +92,8 @@ android {
         applicationId 'live.agnivision.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "0.1.0"
+        versionCode 2
+        versionName "1.0.0"
         manifestPlaceholders = [
             GOOGLE_MAPS_API_KEY_ANDROID: findProperty("GOOGLE_MAPS_API_KEY_ANDROID") ?: System.getenv("GOOGLE_MAPS_API_KEY_ANDROID") ?: ""
         ]
@@ -107,15 +107,25 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+	release {
+	    def uploadStoreFile = findProperty("AGNIVISION_UPLOAD_STORE_FILE")
+	    def uploadStorePassword = findProperty("AGNIVISION_UPLOAD_STORE_PASSWORD")
+	    def uploadKeyAlias = findProperty("AGNIVISION_UPLOAD_KEY_ALIAS")
+	    def uploadKeyPassword = findProperty("AGNIVISION_UPLOAD_KEY_PASSWORD")
+
+	    storeFile file(uploadStoreFile)
+	    storePassword uploadStorePassword
+	    keyAlias uploadKeyAlias
+	    keyPassword uploadKeyPassword
+	}
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+	signingConfig signingConfigs.release
+
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds

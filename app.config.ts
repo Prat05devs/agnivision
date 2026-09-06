@@ -2,15 +2,33 @@ import type { ExpoConfig } from "expo/config";
 
 const androidMapsKey = process.env.GOOGLE_MAPS_API_KEY_ANDROID;
 const iosMapsKey = process.env.GOOGLE_MAPS_API_KEY_IOS;
+const googleCredentials = [
+  ["GOOGLE_MAPS_API_KEY_ANDROID", androidMapsKey],
+  ["GOOGLE_MAPS_API_KEY_IOS", iosMapsKey],
+  ["GOOGLE_PLACES_API_KEY", process.env.GOOGLE_PLACES_API_KEY],
+  ["GOOGLE_GEOCODING_API_KEY", process.env.GOOGLE_GEOCODING_API_KEY],
+] as const;
+for (let left = 0; left < googleCredentials.length; left += 1) {
+  for (let right = left + 1; right < googleCredentials.length; right += 1) {
+    const [leftName, leftValue] = googleCredentials[left]!;
+    const [rightName, rightValue] = googleCredentials[right]!;
+    if (leftValue && rightValue && leftValue === rightValue) {
+      throw new Error(`${leftName} and ${rightName} must use separate, platform-restricted credentials.`);
+    }
+  }
+}
 const mapsConfigured = Boolean(androidMapsKey && iosMapsKey);
-const mapsPlugin: NonNullable<ExpoConfig["plugins"]>[number] = mapsConfigured
-  ? ["react-native-maps", { androidGoogleMapsApiKey: androidMapsKey, iosGoogleMapsApiKey: iosMapsKey }]
-  : "react-native-maps";
+const appIcon = "./public/Agnivision_App_Icon_Pack/expo/icon.png";
+const androidAdaptiveIcon = "./public/Agnivision_App_Icon_Pack/expo/adaptive-icon-foreground.png";
+// Native projects inject platform keys directly. Keeping keys in plugin options
+// would also serialize the iOS key into Android's embedded Expo config.
+const mapsPlugin: NonNullable<ExpoConfig["plugins"]>[number] = "react-native-maps";
 
 const config: ExpoConfig = {
-  name: "AgniVision.live",
+  name: "AgniVision",
   slug: "agnivision",
-  version: "0.1.0",
+  version: "1.0.0",
+  icon: appIcon,
   orientation: "default",
   userInterfaceStyle: "light",
   scheme: "agnivision",
@@ -56,6 +74,7 @@ const config: ExpoConfig = {
   ],
   ios: {
     bundleIdentifier: "live.agnivision.app",
+    icon: appIcon,
     requireFullScreen: true,
     infoPlist: {
       NSLocationWhenInUseUsageDescription:
@@ -67,6 +86,11 @@ const config: ExpoConfig = {
   },
   android: {
     package: "live.agnivision.app",
+    versionCode: 2,
+    adaptiveIcon: {
+      foregroundImage: androidAdaptiveIcon,
+      backgroundColor: "#0D121C",
+    },
     ...(process.env.GOOGLE_SERVICES_JSON
       ? { googleServicesFile: process.env.GOOGLE_SERVICES_JSON }
       : {}),

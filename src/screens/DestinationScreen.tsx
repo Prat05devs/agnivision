@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DataStatusBanner } from "../components/DataStatusBanner";
 import { DetectionCard } from "../components/DetectionCard";
+import { DestinationImageSlider } from "../components/DestinationImageSlider";
 import { FlowHeader } from "../components/FlowHeader";
 import { OfficialAdvisoriesSection } from "../components/OfficialAdvisoriesSection";
 import { selectionHaptic } from "../services/haptics";
@@ -71,6 +72,7 @@ export function DestinationScreen() {
     <View style={styles.screen}>
       <FlowHeader eyebrow="DESTINATION" title={destination.name} onBack={closeOverlay} />
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.content, { paddingBottom: 32 + (Platform.OS === "android" ? insets.bottom : 0) }]} showsVerticalScrollIndicator={false}>
+        <DestinationImageSlider destination={destination} />
         <Text style={styles.region}>{destination.region}</Text>
         <DataStatusBanner status={dataStatus} fetchedAtUtc={lastFetchedAtUtc} error={dataError} />
 

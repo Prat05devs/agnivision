@@ -1,5 +1,6 @@
 import { isCoordinateInIndiaScope } from "../src/map/clustering";
 import type { Coordinate } from "../src/types/fire";
+import { createRateLimit } from "./_requestLimits";
 import {
   detectionAreaCellKey,
   detectionAreaFromAddressComponents,
@@ -8,15 +9,15 @@ import {
 } from "../src/utils/detectionArea";
 
 type CachedArea = { area: DetectionArea | null; expiresAt: number };
-type RateBucket = { count: number; resetAt: number };
 
 const MAX_POINTS = 12;
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const areaCache = new Map<string, CachedArea>();
-const rateBuckets = new Map<string, RateBucket>();
+const consumeRateLimit = createRateLimit(60);
+const pendingAreas = new Map<string, Promise<void>>();
 
 function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
+  return new Response(status === 204 ? null : JSON.stringify(body), {
     status,
     headers: {
       "Access-Control-Allow-Headers": "Content-Type",
@@ -24,20 +25,10 @@ function json(body: unknown, status = 200) {
       "Access-Control-Allow-Origin": "*",
       "Cache-Control": "no-store",
       "Content-Type": "application/json; charset=utf-8",
+      "Referrer-Policy": "no-referrer",
+      "X-Content-Type-Options": "nosniff",
     },
   });
-}
-
-function consumeRateLimit(request: Request, count: number) {
-  const client = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const now = Date.now();
-  const current = rateBuckets.get(client);
-  if (!current || current.resetAt <= now) {
-    rateBuckets.set(client, { count, resetAt: now + 60_000 });
-    return count <= 60;
-  }
-  current.count += count;
-  return current.count <= 60;
 }
 
 function isCoordinate(value: unknown): value is Coordinate {
@@ -54,7 +45,7 @@ async function reverseGeocode(coordinate: Coordinate, key: string): Promise<Dete
   url.searchParams.set("region", "in");
   url.searchParams.set("key", key);
 
-  const response = await fetch(url, { headers: { Accept: "application/json" } });
+  const response = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(10_000) });
   if (!response.ok) throw new Error(`Area lookup returned HTTP ${response.status}.`);
 
   const payload = await response.json() as {
@@ -82,7 +73,7 @@ export default {
 
     try {
       const body = await request.json() as { points?: unknown };
-      if (!Array.isArray(body.points) || body.points.length === 0 || body.points.length > MAX_POINTS) {
+      if (!body || !Array.isArray(body.points) || body.points.length === 0 || body.points.length > MAX_POINTS) {
         return json({ error: `Provide 1–${MAX_POINTS} coordinates.` }, 400);
       }
 
@@ -106,9 +97,16 @@ export default {
         return json({ error: "Too many area lookups. Please wait a moment." }, 429);
       }
 
-      await Promise.all(missing.map(async ([cell, coordinate]) => {
-        const area = await reverseGeocode(coordinate, geocodingKey);
-        areaCache.set(cell, { area, expiresAt: now + CACHE_TTL_MS });
+      await Promise.all(missing.map(([cell, coordinate]) => {
+        const pending = pendingAreas.get(cell);
+        if (pending) return pending;
+        if (pendingAreas.size >= 24) throw new Error("Area service is busy.");
+        const lookup = reverseGeocode(coordinate, geocodingKey).then((area) => {
+          if (areaCache.size >= 10_000) areaCache.delete(areaCache.keys().next().value!);
+          areaCache.set(cell, { area, expiresAt: Date.now() + CACHE_TTL_MS });
+        }).finally(() => pendingAreas.delete(cell));
+        pendingAreas.set(cell, lookup);
+        return lookup;
       }));
 
       const areas = [...uniqueByCell.keys()].flatMap((cell) => {
@@ -116,8 +114,8 @@ export default {
         return area ? [{ cell, ...area }] : [];
       });
       return json({ areas });
-    } catch (error) {
-      return json({ error: error instanceof Error ? error.message : "Area lookup failed." }, 502);
+    } catch {
+      return json({ error: "Area lookup failed." }, 502);
     }
   },
 };

@@ -1,10 +1,10 @@
 import { isCoordinateInIndiaScope } from "../src/map/clustering";
+import { createRateLimit } from "./_requestLimits";
 
-type RateBucket = { count: number; resetAt: number };
-const rateBuckets = new Map<string, RateBucket>();
+const allowRequest = createRateLimit(60);
 
 function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
+  return new Response(status === 204 ? null : JSON.stringify(body), {
     status,
     headers: {
       "Access-Control-Allow-Headers": "Content-Type",
@@ -12,25 +12,16 @@ function json(body: unknown, status = 200) {
       "Access-Control-Allow-Origin": "*",
       "Cache-Control": "no-store",
       "Content-Type": "application/json; charset=utf-8",
+      "Referrer-Policy": "no-referrer",
+      "X-Content-Type-Options": "nosniff",
     },
   });
-}
-
-function allowRequest(request: Request) {
-  const client = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const now = Date.now();
-  const current = rateBuckets.get(client);
-  if (!current || current.resetAt <= now) {
-    rateBuckets.set(client, { count: 1, resetAt: now + 60_000 });
-    return true;
-  }
-  current.count += 1;
-  return current.count <= 60;
 }
 
 async function googleRequest(url: string, key: string, init: RequestInit) {
   const response = await fetch(url, {
     ...init,
+    signal: AbortSignal.timeout(10_000),
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": key,
@@ -51,6 +42,7 @@ export default {
 
     try {
       const body = (await request.json()) as { input?: unknown; placeId?: unknown; sessionToken?: unknown };
+      if (!body || typeof body !== "object" || Array.isArray(body)) return json({ error: "Invalid request body." }, 400);
       const sessionToken = typeof body.sessionToken === "string" && body.sessionToken.length <= 100 ? body.sessionToken : undefined;
       if (typeof body.input === "string") {
         const input = body.input.trim();
@@ -101,8 +93,8 @@ export default {
         });
       }
       return json({ error: "Provide search text or a place ID." }, 400);
-    } catch (error) {
-      return json({ error: error instanceof Error ? error.message : "Destination search failed." }, 502);
+    } catch {
+      return json({ error: "Destination search is temporarily unavailable." }, 502);
     }
   },
 };

@@ -56,9 +56,10 @@ export default {
       const installationId = request.headers.get("X-Agnivision-Installation") ?? "";
       const authorization = request.headers.get("Authorization") ?? "";
       const secret = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
-      if (!/^[a-f0-9-]{30,50}$/i.test(installationId) || secret.length < 32) return json({ error: "Device authentication is required." }, 401);
+      if (!/^[a-f0-9-]{30,50}$/i.test(installationId) || secret.length < 32 || secret.length > 256) return json({ error: "Device authentication is required." }, 401);
 
       const body = (await request.json()) as Record<string, unknown>;
+      if (!body || typeof body !== "object" || Array.isArray(body)) return json({ error: "Invalid device registration." }, 400);
       if (body.installationId !== installationId) return json({ error: "Installation ID mismatch." }, 400);
       const preferences = parsePreferences(body.preferences);
       const watches = parseWatches(body.watches);
@@ -70,7 +71,7 @@ export default {
       const existing = await getDevice(installationId);
       if (existing && !deviceSecretMatches(existing, secret)) return json({ error: "Device authentication failed." }, 401);
       const now = new Date().toISOString();
-      const coarseLocation = isCoordinate(body.coarseLocation)
+      const coarseLocation = locationPermission === "off" ? null : isCoordinate(body.coarseLocation)
         ? { ...body.coarseLocation, updatedAtUtc: now }
         : existing?.coarseLocation ?? null;
       const timezoneOffsetMinutes = Number(body.timezoneOffsetMinutes);
@@ -86,10 +87,11 @@ export default {
         coarseLocation,
         updatedAtUtc: now,
       };
-      await saveDevice(record);
+      const fields = Object.keys(record).filter((field) => field !== "coarseLocation" || locationPermission === "off" || isCoordinate(body.coarseLocation)) as Array<keyof DeviceRecord>;
+      if (!await saveDevice(record, fields)) return json({ error: "Device authentication failed." }, 401);
       return json({ registered: true });
-    } catch (error) {
-      return json({ error: error instanceof Error ? error.message : "Device registration failed." }, 503);
+    } catch {
+      return json({ error: "Device registration failed." }, 503);
     }
   },
 };

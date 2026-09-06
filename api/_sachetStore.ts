@@ -28,6 +28,7 @@ async function redisCommand<T>(...args: string[]) {
   const config = redisConfig();
   if (!config) return null;
   const response = await fetch(config.url, {
+    signal: AbortSignal.timeout(10_000),
     method: "POST",
     headers: { Authorization: `Bearer ${config.token}`, "Content-Type": "application/json" },
     body: JSON.stringify(args),

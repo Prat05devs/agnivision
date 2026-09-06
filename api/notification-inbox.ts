@@ -13,8 +13,8 @@ export default {
         return json({ updated: true });
       }
       return json({ entries: await getInbox(device.installationId) });
-    } catch (error) {
-      return json({ error: error instanceof Error ? error.message : "Inbox is unavailable." }, 503);
+    } catch {
+      return json({ error: "Inbox is unavailable." }, 503);
     }
   },
 };
