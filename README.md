@@ -1,4 +1,4 @@
-# AgniVision.live
+# AgniVision
 
 Official website: [agnivision.live](https://agnivision.live)
 
@@ -25,7 +25,7 @@ This section is the project’s delivery record. Every completed feature change 
 
 | Feature | Status | Delivered behavior |
 | --- | --- | --- |
-| Product identity | Implemented | The public product name is exactly **AgniVision.live** across the app, system labels, permissions, notifications, and documentation. Legacy ForestVision naming has been removed. Internal native target and package identifiers remain stable to avoid a destructive project migration. |
+| Product identity | Implemented | The installed app and launcher name are exactly **AgniVision**. The official website remains **agnivision.live**. Internal native target and package identifiers remain stable to avoid a destructive project migration. |
 | Brand navigation | Implemented | A reusable logo-and-wordmark component is the Home action in main and flow headers. The redundant Home tab has been removed; Map, Activity, and Settings remain available in the compact tab bar. |
 | Official advisories | Implemented; runtime QA pending | Relevant active NDMA SACHET CAP advisories are discovered through the official RSS feed, fetched server-side with mandatory ETag/304 handling, normalized without mixing official severity with FIRMS confidence, cached through Redis when configured, and surfaced on Home, destinations, a dedicated list/detail flow, and a compact map indicator. |
 | Launch experience | Implemented | The former custom splash screen has been removed pending the client-approved replacement. |
@@ -57,7 +57,7 @@ This section is the project’s delivery record. Every completed feature change 
 - An explicit in-memory retention policy: at most five days or 2,500 observations, with no activity history written to phone storage
 - Zustand store for detections, time filters, selection, map tab, and foreground location
 - Permission-aware location restoration on launch and foreground resume, without repeatedly prompting users who denied access
-- A Vercel serverless function that queries FIRMS, validates `days=1` through `days=5`, normalizes MODIS/VIIRS records, and caches public responses
+- A portable Node API service that queries FIRMS, validates `days=1` through `days=5`, normalizes MODIS/VIIRS records, and caches public responses
 - A dedicated mobile repository that calls the normalized server endpoint instead of exposing a NASA FIRMS key in the app
 - Server-only, India-scoped reverse geocoding for locality/city/state labels, requested only for visible observations and batched up to 12 coordinates
 - Clear loading, empty, stale-data, and error states
@@ -106,28 +106,27 @@ npm run ios
 
 ## Verification record
 
-Last updated: 2026-09-03.
+Last updated: 2026-09-06.
 
 - Strict TypeScript check: passed.
-- Automated unit tests: 35 passed, including Android detection/destination back-order, thermal intensity/clustering, equal-weight India-only heat density, end-to-end FIRMS India-boundary, Places proxy coverage, area parsing, India rejection, locality-cell coalescing, and server-key protection.
+- Automated unit tests: 47 passed, including 100-request cache coalescing, failure cooldown, Android detection/destination back-order, thermal intensity/clustering, India-boundary checks, Places proxy coverage, area parsing, locality-cell coalescing, and server-key protection.
 - Expo public configuration resolution: passed.
 - Android manifest and iOS property-list parsing: passed.
 - Navigation audit: one root `NavigationContainer`, one root `SafeAreaProvider`, native screens enabled, no manual overlay-screen swapping, and no unscoped back listener.
 - Runtime navigation guard: returning to Main checks `canGoBack()` before dispatching `popToTop`, preventing the development-only unhandled `POP_TO_TOP` warning.
 - iOS orientation handling: runtime lock/unlock calls are skipped because supported orientations are already declared in `Info.plist`, avoiding the UIKit `UIDevice.orientation` development warning.
 - iOS native verification: a fresh signed simulator app built and launched successfully; Google attribution, the styled basemap, live FIRMS data, and clustered Thermal Signals were visually confirmed. The final observed feed contained 176 detections.
-- Android native verification: the arm64 release variant built successfully across 474 Gradle tasks. The APK has application ID `live.agnivision.app`, label `Agnivision`, version `0.1.0`/code `1`, target SDK 36, only `arm64-v8a` native libraries, Google Maps metadata, and notification/foreground/background-location permissions. APK ZIP and v2 signature verification passed.
-- Android signing boundary: the APK uses the generated Android debug certificate in a release build type. It is suitable for direct client/device testing, but must be rebuilt with the protected production upload/release key before Play distribution.
-- Current source/artifact boundary: branding, map-first Home, public attribution controls, the continuous thermal heat layer, and public area labels were added after the artifacts below. No native app was recompiled and no artifact was recreated, per the user’s explicit instruction; those artifacts therefore do not contain these latest source changes.
+- Android native verification: the current signed AAB built successfully for all configured ABIs with application ID `live.agnivision.app`, launcher label `AgniVision`, version `1.0.0`/code `2`, and target SDK 36. Release lint, signature verification, merged-manifest review, and an exact server-credential scan passed.
 - Still pending: Android runtime testing and physical Android/iOS verification across notch, punch-hole, gesture navigation, three-button navigation, tablet, rotation, keyboard, map overlays, and notification-open scenarios.
 - Remote push delivery remains pending because `EXPO_PUBLIC_EAS_PROJECT_ID`, Android `google-services.json`/FCM credentials, iOS APNs credentials, and the deployed notification backend are not configured locally. This does not affect Google Maps.
 
 ## Native artifact ledger
 
-New artifacts use new filenames; the two earlier Android APKs were preserved unchanged.
+Earlier APK/ZIP entries below are historical. The first row is the current Android release candidate.
 
 | Artifact | Purpose and validation | Bytes | SHA-256 |
 | --- | --- | ---: | --- |
+| `artifacts/AgniVision-1.0.0-2-release.aab` | Current signed Play release candidate; all four ABIs, release lint, signature, manifest, and credential scan verified. | 57,883,068 | `980a7616b833227d1496c5dfe5a0e0b918f6da6cfbc62af7f64531ebc20562c5` |
 | `artifacts/Agnivision-v0.1.0-arm64-google-maps-complete.apk` | Fresh Android arm64 test-release APK with Google Maps and all current app modules; package, ABI, manifest, ZIP, and v2 signature checks passed. | 33,400,769 | `9963bab47011b89413f0a165dcdeaf641bc53bc92f5987901569f8049cf2f06b` |
 | `artifacts/Agnivision-v0.1.0-ios-simulator-google-maps.zip` | Fresh signed iOS simulator `.app`; launched successfully with Google Maps and live clusters. Archive and Google Maps SDK resource checks passed. | 25,401,164 | `399fc144b4f363d5318d0a0deb323cf9d0aa8d7afa7713b4657fe7a1304d87ea` |
 | `artifacts/Agnivision-v0.1.0-arm64-live-firms.apk` | Earlier preserved Android APK. | 31,496,167 | `4489c7c55e9303b33390e26f2164f576db2b64ef2979e8003a92ba88e11ab240` |

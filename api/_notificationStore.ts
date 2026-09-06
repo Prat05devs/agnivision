@@ -37,6 +37,7 @@ function redisConfig() {
 async function command<T>(...args: Array<string | number>) {
   const { url, token } = redisConfig();
   const response = await fetch(url, {
+    signal: AbortSignal.timeout(10_000),
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify(args),
@@ -77,16 +78,31 @@ export async function getDevice(installationId: string): Promise<DeviceRecord | 
   }
 }
 
-export async function saveDevice(record: DeviceRecord) {
-  await Promise.all([
-    command("SET", deviceKey(record.installationId), JSON.stringify(record)),
-    command("SADD", `${KEY_PREFIX}:devices`, record.installationId),
-  ]);
+export async function saveDevice(record: DeviceRecord, fields?: Array<keyof DeviceRecord>) {
+  // Authentication and merge must be atomic across requests and server replicas.
+  const result = await command<number>("EVAL", `
+    local raw = redis.call('GET', KEYS[1])
+    local incoming = cjson.decode(ARGV[1])
+    if raw then
+      local current = cjson.decode(raw)
+      if current.secretHash ~= incoming.secretHash then return 0 end
+      local fields = cjson.decode(ARGV[2])
+      for _, field in ipairs(fields) do current[field] = incoming[field] end
+      incoming = current
+    end
+    redis.call('SET', KEYS[1], cjson.encode(incoming))
+    redis.call('SADD', KEYS[2], ARGV[3])
+    return 1
+  `, 2, deviceKey(record.installationId), `${KEY_PREFIX}:devices`, JSON.stringify(record), JSON.stringify(fields ?? Object.keys(record)), record.installationId);
+  return result === 1;
 }
 
 export async function listDevices() {
   const ids = await command<string[]>("SMEMBERS", `${KEY_PREFIX}:devices`);
-  const devices = await Promise.all((ids ?? []).map(getDevice));
+  const devices: Array<DeviceRecord | null> = [];
+  for (let index = 0; index < (ids ?? []).length; index += 25) {
+    devices.push(...await Promise.all(ids.slice(index, index + 25).map(getDevice)));
+  }
   return devices.filter((device): device is DeviceRecord => device !== null);
 }
 
@@ -108,15 +124,18 @@ export async function getInbox(installationId: string) {
 }
 
 export async function markInboxRead(installationId: string) {
-  const entries = await getInbox(installationId);
-  if (entries.length === 0) return;
-  const readAtUtc = new Date().toISOString();
-  const updated = entries.map((entry) => JSON.stringify({ ...entry, readAtUtc: entry.readAtUtc ?? readAtUtc }));
-  await command("DEL", inboxKey(installationId));
-  if (updated.length > 0) {
-    await command("RPUSH", inboxKey(installationId), ...updated);
-    await command("EXPIRE", inboxKey(installationId), 180 * 24 * 60 * 60);
-  }
+  // Never DEL/rebuild: that can discard concurrently appended notifications.
+  await command("EVAL", `
+    local entries = redis.call('LRANGE', KEYS[1], 0, 199)
+    for index, raw in ipairs(entries) do
+      local ok, entry = pcall(cjson.decode, raw)
+      if ok and type(entry) == 'table' then
+        if not entry.readAtUtc or entry.readAtUtc == cjson.null then entry.readAtUtc = ARGV[1] end
+        redis.call('LSET', KEYS[1], index - 1, cjson.encode(entry))
+      end
+    end
+    return #entries
+  `, 1, inboxKey(installationId), new Date().toISOString());
 }
 
 export async function getDedupSeverity(installationId: string, eventId: string) {

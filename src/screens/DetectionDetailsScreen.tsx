@@ -7,17 +7,18 @@ import { FlowHeader } from "../components/FlowHeader";
 import { ShareableObservationCard } from "../components/ShareableObservationCard";
 import { useDetectionAreaLabel } from "../hooks/useDetectionAreaLabel";
 import { saveObservationImage, shareObservationImage } from "../services/observationImageService";
+import { shareObservationLocation } from "../services/observationLocationService";
 import { errorHaptic, successHaptic, warningHaptic } from "../services/haptics";
 import { useAppStore } from "../store/useAppStore";
 import { formatConfidence, formatObservationTime, formatSensor } from "../utils/fire";
 import { intensityLabel } from "../utils/intensity";
 
-type ImageAction = "share" | "save" | null;
+type ShareAction = "location" | "image" | "save" | null;
 
 export function DetectionDetailsScreen() {
   const insets = useSafeAreaInsets();
   const shareCardRef = useRef<ViewShotRef>(null);
-  const [imageAction, setImageAction] = useState<ImageAction>(null);
+  const [shareAction, setShareAction] = useState<ShareAction>(null);
   const [sourceDetailsExpanded, setSourceDetailsExpanded] = useState(false);
   const selectedDetectionId = useAppStore((state) => state.selectedDetectionId);
   const detections = useAppStore((state) => state.detections);
@@ -46,7 +47,7 @@ export function DetectionDetailsScreen() {
   };
 
   const handleShareImage = async () => {
-    setImageAction("share");
+    setShareAction("image");
     let uri: string | null = null;
     try {
       uri = await captureObservation();
@@ -64,12 +65,12 @@ export function DetectionDetailsScreen() {
       if (uri) {
         releaseCapture(uri);
       }
-      setImageAction(null);
+      setShareAction(null);
     }
   };
 
   const handleSaveImage = async () => {
-    setImageAction("save");
+    setShareAction("save");
     let uri: string | null = null;
     try {
       uri = await captureObservation();
@@ -99,7 +100,25 @@ export function DetectionDetailsScreen() {
       if (uri) {
         releaseCapture(uri);
       }
-      setImageAction(null);
+      setShareAction(null);
+    }
+  };
+
+  const handleShareLocation = async () => {
+    setShareAction("location");
+    try {
+      const shared = await shareObservationLocation(
+        { latitude: detection.latitude, longitude: detection.longitude },
+        areaLabel,
+      );
+      if (shared) {
+        await successHaptic();
+      }
+    } catch {
+      await errorHaptic();
+      Alert.alert("Couldn’t share location", "The observation location could not be shared. Please try again.");
+    } finally {
+      setShareAction(null);
     }
   };
 
@@ -111,23 +130,37 @@ export function DetectionDetailsScreen() {
           <ShareableObservationCard detection={detection} />
         </ViewShot>
 
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Share observation location"
+          disabled={shareAction !== null}
+          onPress={() => void handleShareLocation()}
+          style={({ pressed }) => [styles.locationAction, pressed && styles.pressed, shareAction !== null && styles.disabled]}
+        >
+          <View style={styles.locationActionBody}>
+            <Text style={styles.locationActionText}>{shareAction === "location" ? "Opening share options…" : "Share location"}</Text>
+            <Text style={styles.locationActionCopy}>Send coordinates and a link that opens in maps</Text>
+          </View>
+          <Text style={styles.locationActionGlyph}>⌖</Text>
+        </Pressable>
+
         <View style={styles.imageActions}>
           <Pressable
             accessibilityRole="button"
-            disabled={imageAction !== null}
+            disabled={shareAction !== null}
             onPress={() => void handleShareImage()}
-            style={({ pressed }) => [styles.primaryAction, pressed && styles.pressed, imageAction !== null && styles.disabled]}
+            style={({ pressed }) => [styles.primaryAction, pressed && styles.pressed, shareAction !== null && styles.disabled]}
           >
-            <Text style={styles.primaryActionText}>{imageAction === "share" ? "Preparing…" : "Share image"}</Text>
+            <Text style={styles.primaryActionText}>{shareAction === "image" ? "Preparing…" : "Share image"}</Text>
             <Text style={styles.primaryActionText}>↗</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            disabled={imageAction !== null}
+            disabled={shareAction !== null}
             onPress={() => void handleSaveImage()}
-            style={({ pressed }) => [styles.secondaryAction, pressed && styles.pressed, imageAction !== null && styles.disabled]}
+            style={({ pressed }) => [styles.secondaryAction, pressed && styles.pressed, shareAction !== null && styles.disabled]}
           >
-            <Text style={styles.secondaryActionText}>{imageAction === "save" ? "Saving…" : "Save to gallery"}</Text>
+            <Text style={styles.secondaryActionText}>{shareAction === "save" ? "Saving…" : "Save to gallery"}</Text>
           </Pressable>
         </View>
 
@@ -193,9 +226,14 @@ function Detail({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   screen: { backgroundColor: "#FBFCFB", flex: 1 },
   content: { alignSelf: "center", gap: 16, maxWidth: 760, padding: 20, paddingTop: 18, width: "100%" },
+  locationAction: { alignItems: "center", backgroundColor: "#17633A", borderRadius: 13, flexDirection: "row", justifyContent: "space-between", padding: 14 },
+  locationActionBody: { flex: 1, paddingRight: 12 },
+  locationActionText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
+  locationActionCopy: { color: "#CDE6D3", fontSize: 10, marginTop: 3 },
+  locationActionGlyph: { color: "#FFFFFF", fontSize: 24, fontWeight: "800" },
   imageActions: { flexDirection: "row", gap: 9 },
-  primaryAction: { alignItems: "center", backgroundColor: "#17633A", borderRadius: 13, flex: 1, flexDirection: "row", justifyContent: "space-between", padding: 14 },
-  primaryActionText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
+  primaryAction: { alignItems: "center", backgroundColor: "#E8F2EA", borderRadius: 13, flex: 1, flexDirection: "row", justifyContent: "space-between", padding: 14 },
+  primaryActionText: { color: "#17633A", fontSize: 12, fontWeight: "800" },
   secondaryAction: { alignItems: "center", backgroundColor: "#E8F2EA", borderRadius: 13, flex: 1, justifyContent: "center", padding: 14 },
   secondaryActionText: { color: "#17633A", fontSize: 12, fontWeight: "800" },
   disabled: { opacity: 0.55 },

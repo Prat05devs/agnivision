@@ -28,6 +28,8 @@ export type FireDetectionsPayload = {
 type CsvRow = Record<string, string>;
 
 const cache = new Map<number, CacheEntry>();
+const inFlight = new Map<number, Promise<FireDetectionsPayload>>();
+const retryAfter = new Map<number, number>();
 
 function json(body: unknown, status = 200, cacheControl = "no-store") {
   return new Response(JSON.stringify(body), {
@@ -236,7 +238,7 @@ async function fetchText(url: string) {
       throw new Error(`FIRMS returned HTTP ${response.status}`);
     }
 
-    return response.text();
+    return await response.text();
   } finally {
     clearTimeout(timeout);
   }
@@ -305,8 +307,20 @@ export default {
     }
 
     try {
-      const response = await getDetections(mapKey, dayRange);
-      cache.set(dayRange, { response, expiresAt: Date.now() + CACHE_TTL_MS });
+      if ((retryAfter.get(dayRange) ?? 0) > Date.now()) throw new Error("Upstream cooling down.");
+      let refresh = inFlight.get(dayRange);
+      if (!refresh) {
+        refresh = getDetections(mapKey, dayRange).then((response) => {
+          cache.set(dayRange, { response, expiresAt: Date.now() + CACHE_TTL_MS });
+          retryAfter.delete(dayRange);
+          return response;
+        }).catch((error: unknown) => {
+          retryAfter.set(dayRange, Date.now() + 30_000);
+          throw error;
+        }).finally(() => inFlight.delete(dayRange));
+        inFlight.set(dayRange, refresh);
+      }
+      const response = await refresh;
       return json(response, 200, "public, max-age=60, s-maxage=600, stale-while-revalidate=300");
     } catch {
       if (cached) {

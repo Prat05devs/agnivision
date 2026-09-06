@@ -12,3 +12,5 @@ google-services.json
 .vercel
 .env*
 artifacts/
+.ds_store
+agnivision-upload-key.jks

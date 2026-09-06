@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Constants from "expo-constants";
 
 export function InfoScreen({ embedded = false }: { embedded?: boolean }) {
   const [sourcesExpanded, setSourcesExpanded] = useState(false);
+  const version = Constants.expoConfig?.version ?? "1.0.0";
   const content = (
     <>
       <View>
@@ -50,7 +52,7 @@ export function InfoScreen({ embedded = false }: { embedded?: boolean }) {
         </Text>
       </View>
 
-      <Text style={styles.version}>AgniVision.live · v0.1.0</Text>
+      <Text style={styles.version}>AgniVision.live · v{version}</Text>
     </>
   );
 

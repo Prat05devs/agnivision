@@ -2,11 +2,11 @@ import { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { DataStatusBanner } from "../components/DataStatusBanner";
-import { DetectionCard } from "../components/DetectionCard";
 import { HomeMapPreview } from "../components/HomeMapPreview";
 import { LiveObservationCard } from "../components/LiveObservationCard";
 import { OfficialAdvisoriesSection } from "../components/OfficialAdvisoriesSection";
 import { TimeWindowPicker } from "../components/TimeWindowPicker";
+import { UttarakhandUpdatesSection } from "../components/UttarakhandUpdatesSection";
 import { errorHaptic, selectionHaptic, successHaptic, warningHaptic } from "../services/haptics";
 import { useAppStore } from "../store/useAppStore";
 import { filterDetectionsByTime, formatDistanceKm, haversineDistanceKm } from "../utils/fire";
@@ -93,6 +93,13 @@ export function HomeScreen() {
 
       <HomeMapPreview />
 
+      <LiveObservationCard
+        dataAvailable={dataStatus === "ready" || dataStatus === "stale"}
+        detections={visibleDetections}
+        onOpenDetection={openDetectionDetails}
+        onOpenMap={() => openTab("map")}
+      />
+
       <OfficialAdvisoriesSection />
 
       <DataStatusBanner status={dataStatus} fetchedAtUtc={lastFetchedAtUtc} error={dataError} />
@@ -136,45 +143,11 @@ export function HomeScreen() {
       </View>
       {locationError ? <Text style={styles.locationError}>{locationError}</Text> : null}
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Recent updates</Text>
-        <Pressable accessibilityRole="button" onPress={() => openTab("activity")}>
-          <Text style={styles.seeAll}>See all</Text>
-        </Pressable>
-      </View>
-
-      <LiveObservationCard
-        dataAvailable={dataStatus === "ready" || dataStatus === "stale"}
+      <UttarakhandUpdatesSection
+        dataStatus={dataStatus}
         detections={visibleDetections}
         onOpenDetection={openDetectionDetails}
-        onOpenMap={() => openTab("map")}
       />
-
-      {visibleDetections.slice(0, 3).map((detection) => {
-        const distance = userLocation
-          ? formatDistanceKm(
-              haversineDistanceKm(userLocation, {
-                latitude: detection.latitude,
-                longitude: detection.longitude,
-              }),
-            )
-          : undefined;
-
-        return (
-          <DetectionCard
-            key={detection.id}
-            detection={detection}
-            distanceLabel={distance ? `Approx. ${distance}` : undefined}
-            onPress={() => openDetectionDetails(detection.id)}
-          />
-        );
-      })}
-      {dataStatus === "ready" && visibleDetections.length === 0 ? (
-        <View style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>No recent satellite detections found in this window.</Text>
-          <Text style={styles.emptyText}>This does not confirm that no fires exist in the area.</Text>
-        </View>
-      ) : null}
 
       <Pressable
         accessibilityRole="button"
@@ -239,11 +212,6 @@ const styles = StyleSheet.create({
   locationButton: { backgroundColor: "#14532D", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
   locationButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
   locationError: { color: "#8B1E17", fontSize: 12, lineHeight: 18, marginTop: -10 },
-  sectionHeader: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
-  seeAll: { color: "#17633A", fontSize: 13, fontWeight: "800" },
-  emptyCard: { backgroundColor: "#F4F7F4", borderRadius: 16, gap: 5, padding: 16 },
-  emptyTitle: { color: "#324238", fontSize: 14, fontWeight: "700", lineHeight: 20 },
-  emptyText: { color: "#657168", fontSize: 12, lineHeight: 17 },
   note: { borderTopColor: "#DFE6E0", borderTopWidth: 1, gap: 5, marginTop: 4, paddingTop: 16 },
   noteTitle: { color: "#324238", fontSize: 13, fontWeight: "800" },
   noteText: { color: "#657168", fontSize: 12, lineHeight: 18 },

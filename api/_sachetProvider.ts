@@ -145,7 +145,13 @@ function responseFrom(snapshot: SachetSnapshot): AdvisoryDataResponse {
   return { advisories, fetchedAtUtc: snapshot.lastSuccessfulFeedAtUtc ?? lastCheckedAtUtc, lastCheckedAtUtc, isStale: !hasSuccessfulFeed || staleAge > REFRESH_INTERVAL_MS * 2, isUnavailable: !hasSuccessfulFeed || staleAge > STALE_THRESHOLD_MS };
 }
 
-export async function getOfficialAdvisories(force = false) {
+let pendingRefresh: Promise<AdvisoryDataResponse> | undefined;
+export function getOfficialAdvisories(force = false) {
+  if (!pendingRefresh) pendingRefresh = refreshOfficialAdvisories(force).finally(() => { pendingRefresh = undefined; });
+  return pendingRefresh;
+}
+
+async function refreshOfficialAdvisories(force = false) {
   const snapshot = await loadSachetSnapshot();
   if (!force && snapshot.lastAttemptAtUtc && Date.now() - Date.parse(snapshot.lastAttemptAtUtc) < REFRESH_INTERVAL_MS) return responseFrom(snapshot);
   const checkedAt = new Date().toISOString();

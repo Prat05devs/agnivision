@@ -16,16 +16,17 @@ export default {
       const device = await authenticateDevice(request);
       if (isResponse(device)) return device;
       if (request.method === "DELETE") {
-        await saveDevice({ ...device, coarseLocation: null, updatedAtUtc: new Date().toISOString() });
+        await saveDevice({ ...device, coarseLocation: null, updatedAtUtc: new Date().toISOString() }, ["coarseLocation", "updatedAtUtc"]);
         return json({ cleared: true });
       }
+      if (device.locationPermission === "off") return json({ error: "Location permission is required." }, 403);
       const body = (await request.json()) as { coordinate?: unknown; areaLabel?: unknown };
-      if (!isCoordinate(body.coordinate)) return json({ error: "A valid coarse coordinate is required." }, 400);
+      if (!body || !isCoordinate(body.coordinate)) return json({ error: "A valid coarse coordinate is required." }, 400);
       const areaLabel = typeof body.areaLabel === "string" && body.areaLabel.trim().length <= 160 ? body.areaLabel.trim() : device.coarseLocation?.areaLabel;
-      await saveDevice({ ...device, coarseLocation: { ...body.coordinate, ...(areaLabel ? { areaLabel } : {}), updatedAtUtc: new Date().toISOString() }, updatedAtUtc: new Date().toISOString() });
+      await saveDevice({ ...device, coarseLocation: { ...body.coordinate, ...(areaLabel ? { areaLabel } : {}), updatedAtUtc: new Date().toISOString() }, updatedAtUtc: new Date().toISOString() }, ["coarseLocation", "updatedAtUtc"]);
       return json({ updated: true });
-    } catch (error) {
-      return json({ error: error instanceof Error ? error.message : "Location update failed." }, 503);
+    } catch {
+      return json({ error: "Location update failed." }, 503);
     }
   },
 };

@@ -264,6 +264,7 @@ function channelFor(event: Pick<CandidateEvent, "category" | "severity">) {
 async function sendPush(device: DeviceRecord, entry: NotificationInboxEntry) {
   if (!device.expoPushToken) return false;
   const response = await fetch("https://exp.host/--/api/v2/push/send", {
+    signal: AbortSignal.timeout(15_000),
     method: "POST",
     headers: {
       Accept: "application/json",
@@ -287,7 +288,7 @@ async function sendPush(device: DeviceRecord, entry: NotificationInboxEntry) {
   const payload = (await response.json()) as { data?: { id?: string; status?: string; details?: { error?: string } } | Array<{ id?: string; status?: string; details?: { error?: string } }> };
   const ticket = Array.isArray(payload.data) ? payload.data[0] : payload.data;
   if (ticket?.details?.error === "DeviceNotRegistered") {
-    await saveDevice({ ...device, expoPushToken: null, updatedAtUtc: new Date().toISOString() });
+    await saveDevice({ ...device, expoPushToken: null, updatedAtUtc: new Date().toISOString() }, ["expoPushToken", "updatedAtUtc"]);
   }
   if (ticket?.status === "ok" && ticket.id) {
     await recordPushTicket(ticket.id, device.installationId);
@@ -299,6 +300,7 @@ async function processPushReceipts() {
   const tickets = await listPushTickets();
   if (tickets.length === 0) return;
   const response = await fetch("https://exp.host/--/api/v2/push/getReceipts", {
+    signal: AbortSignal.timeout(15_000),
     method: "POST",
     headers: {
       Accept: "application/json",
@@ -314,7 +316,7 @@ async function processPushReceipts() {
     if (!receipt) continue;
     if (receipt.details?.error === "DeviceNotRegistered") {
       const device = await getDevice(ticket.installationId);
-      if (device) await saveDevice({ ...device, expoPushToken: null, updatedAtUtc: new Date().toISOString() });
+      if (device) await saveDevice({ ...device, expoPushToken: null, updatedAtUtc: new Date().toISOString() }, ["expoPushToken", "updatedAtUtc"]);
     }
     await clearPushTicket(ticket.id);
   }
@@ -384,14 +386,18 @@ async function dispatchSystemStatus(devices: DeviceRecord[], now: Date) {
     target: {},
     dedup: [],
   };
-  await Promise.all(devices.filter((device) => device.preferences.masterEnabled && device.preferences.systemStatusEnabled).map((device) => deliver(device, event, now)));
+  const eligible = devices.filter((device) => device.preferences.masterEnabled && device.preferences.systemStatusEnabled);
+  for (let index = 0; index < eligible.length; index += 10) {
+    await Promise.all(eligible.slice(index, index + 10).map((device) => deliver(device, event, now)));
+  }
 }
 
 export default {
   async fetch(request: Request) {
     if (request.method !== "GET") return json({ error: "Method not allowed." }, 405);
     const secret = process.env.CRON_SECRET;
-    if (secret && request.headers.get("Authorization") !== `Bearer ${secret}`) return json({ error: "Unauthorized." }, 401);
+    if (!secret) return json({ error: "Notification dispatch is not configured." }, 503);
+    if (request.headers.get("Authorization") !== `Bearer ${secret}`) return json({ error: "Unauthorized." }, 401);
     try {
       if (!(await acquireDispatchLock())) return json({ skipped: "A dispatch is already running." }, 202);
       await processPushReceipts().catch(() => undefined);
@@ -431,8 +437,11 @@ export default {
       let pushed = 0;
       let logged = 0;
 
-      for (const device of devices) {
-        if (!device.preferences.masterEnabled) continue;
+      const activeDevices = devices.filter((device) => device.preferences.masterEnabled);
+      for (let index = 0; index < activeDevices.length; index += 10) {
+        const batch = await Promise.all(activeDevices.slice(index, index + 10).map(async (device) => {
+          let devicePushed = 0;
+          let deviceLogged = 0;
         const proximity = await proximityEvent(device, detections, now);
         const destinations = await destinationEvents(device, detections, now);
         const personal = [...(proximity ? [proximity] : []), ...destinations].sort((a, b) => eventPriority(b) - eventPriority(a));
@@ -441,25 +450,29 @@ export default {
         const handledDetectionIds = new Set<string>();
         for (const event of personal) {
           if (event.dedup.some((item) => handledDetectionIds.has(item.id))) continue;
-          pushed += (await deliver(device, event, now)) ? 1 : 0;
-          logged += 1;
+          devicePushed += (await deliver(device, event, now)) ? 1 : 0;
+          deviceLogged += 1;
           event.dedup.forEach((item) => handledDetectionIds.add(item.id));
         }
         if (device.preferences.regionalHotspotsEnabled) {
           for (const event of approvedRegional) {
-            pushed += (await deliver(device, event, now)) ? 1 : 0;
-            logged += 1;
+            devicePushed += (await deliver(device, event, now)) ? 1 : 0;
+            deviceLogged += 1;
           }
         }
         const digest = await weeklyDigestEvent(device, detections, now);
         if (digest) {
-          pushed += (await deliver(device, digest, now)) ? 1 : 0;
-          logged += 1;
+          devicePushed += (await deliver(device, digest, now)) ? 1 : 0;
+          deviceLogged += 1;
         }
+          return { pushed: devicePushed, logged: deviceLogged };
+        }));
+        pushed += batch.reduce((sum, result) => sum + result.pushed, 0);
+        logged += batch.reduce((sum, result) => sum + result.logged, 0);
       }
       return json({ devices: devices.length, detections: detections.length, logged, pushed });
-    } catch (error) {
-      return json({ error: error instanceof Error ? error.message : "Notification dispatch failed." }, 503);
+    } catch {
+      return json({ error: "Notification dispatch failed." }, 503);
     }
   },
 };

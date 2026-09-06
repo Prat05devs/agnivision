@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import MapView, { Circle, Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE, type MapPressEvent } from "react-native-maps";
+import MapView, { Circle, Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE, type MapPressEvent, type MapType } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DataStatusBanner } from "../components/DataStatusBanner";
@@ -28,6 +28,7 @@ export function MapScreen() {
   const [mapReady, setMapReady] = useState(false);
   const [mapLoadSlow, setMapLoadSlow] = useState(false);
   const [mapInstanceKey, setMapInstanceKey] = useState(0);
+  const [mapType, setMapType] = useState<MapType>("hybrid");
   const [legendExpanded, setLegendExpanded] = useState(false);
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
@@ -127,6 +128,11 @@ export function MapScreen() {
     setMapInstanceKey((current) => current + 1);
   };
 
+  const toggleMapType = () => {
+    void selectionHaptic();
+    setMapType((current) => (current === "hybrid" ? "standard" : "hybrid"));
+  };
+
   const selectMapDetection = (detection: FireDetection) => {
     void selectionHaptic();
     selectDetection(detection.id);
@@ -178,7 +184,8 @@ export function MapScreen() {
         key={`map:${mapInstanceKey}`}
         ref={mapRef}
         provider={useIosDevelopmentMapKit ? PROVIDER_DEFAULT : PROVIDER_GOOGLE}
-        customMapStyle={useIosDevelopmentMapKit ? undefined : AGNIVISION_GOOGLE_MAP_STYLE}
+        mapType={mapType}
+        customMapStyle={useIosDevelopmentMapKit || mapType === "hybrid" ? undefined : AGNIVISION_GOOGLE_MAP_STYLE}
         initialRegion={mapRegion}
         onMapReady={() => {
           setMapReady(true);
@@ -232,6 +239,17 @@ export function MapScreen() {
       </View>
 
       <View style={[styles.actions, { bottom: sheetVisible && !useSideSheet ? 300 : 24, right: insets.right + 14 + (sheetVisible && useSideSheet ? sideSheetWidth + 16 : 0) }]} pointerEvents="box-none">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Switch to ${mapType === "hybrid" ? "standard" : "satellite imagery"} map layer`}
+          accessibilityState={{ selected: mapType === "hybrid" }}
+          onPress={toggleMapType}
+          style={[styles.compactAction, mapType === "hybrid" && styles.layerActionSelected]}
+        >
+          <Text style={[styles.compactActionText, mapType === "hybrid" && styles.layerActionTextSelected]}>
+            {mapType === "hybrid" ? "IMAGERY" : "STANDARD"}
+          </Text>
+        </Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel="View detections as a list" onPress={() => setActiveTab("activity")} style={styles.compactAction}><Text style={styles.compactActionText}>LIST</Text></Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel="Zoom to India" onPress={() => mapRef.current?.animateToRegion(INDIA_INITIAL_REGION, 450)} style={styles.compactAction}><Text style={styles.compactActionText}>INDIA</Text></Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel="Refresh satellite detections" onPress={() => void handleRefresh()} style={styles.roundAction}><Text style={styles.roundActionText}>↻</Text></Pressable>
@@ -322,7 +340,7 @@ const styles = StyleSheet.create({
   searchGlyph: { color: colors.forestAccent, fontSize: 22 }, searchText: { color: "#33443A", flex: 1, fontSize: 13, fontWeight: "700" }, searchArrow: { color: colors.forestAccent, fontSize: 24 },
   filterRow: { gap: 7, paddingRight: 14 }, filterDivider: { width: 2 }, filterChip: { backgroundColor: "rgba(255,255,255,0.95)", borderRadius: 15, paddingHorizontal: 11, paddingVertical: 8 }, filterChipSelected: { backgroundColor: colors.forest }, filterChipText: { color: "#46554B", fontSize: 10, fontWeight: "800" }, filterChipTextSelected: { color: colors.surface },
   destinationSignal: { alignItems: "center", backgroundColor: "rgba(37,99,235,0.18)", borderColor: colors.destination, borderRadius: 18, borderWidth: 2, height: 36, justifyContent: "center", width: 36 }, destinationCore: { backgroundColor: colors.destination, borderColor: colors.surface, borderRadius: 7, borderWidth: 2, height: 14, width: 14 }, currentSignal: { alignItems: "center", backgroundColor: "rgba(37,99,235,0.16)", borderRadius: 15, height: 30, justifyContent: "center", width: 30 }, currentCore: { backgroundColor: colors.destination, borderColor: colors.surface, borderRadius: 7, borderWidth: 2, height: 14, width: 14 },
-  actions: { alignItems: "flex-end", gap: 9, position: "absolute" }, compactAction: { alignItems: "center", backgroundColor: "rgba(255,255,255,0.97)", borderRadius: 12, elevation: 2, justifyContent: "center", minHeight: 36, paddingHorizontal: 10 }, compactActionText: { color: colors.forest, fontSize: 9, fontWeight: "900", letterSpacing: 0.6 }, roundAction: { alignItems: "center", backgroundColor: colors.surface, borderRadius: 22, elevation: 2, height: 44, justifyContent: "center", width: 44 }, roundActionText: { color: colors.forest, fontSize: 23, fontWeight: "700" }, locationAction: { alignItems: "center", backgroundColor: colors.surface, borderRadius: 24, elevation: 2, height: 48, justifyContent: "center", width: 48 }, locationActionText: { color: colors.destination, fontSize: 25, fontWeight: "800" },
+  actions: { alignItems: "flex-end", gap: 9, position: "absolute" }, compactAction: { alignItems: "center", backgroundColor: "rgba(255,255,255,0.97)", borderRadius: 12, elevation: 2, justifyContent: "center", minHeight: 36, paddingHorizontal: 10 }, compactActionText: { color: colors.forest, fontSize: 9, fontWeight: "900", letterSpacing: 0.6 }, layerActionSelected: { backgroundColor: "rgba(20,83,45,0.96)" }, layerActionTextSelected: { color: colors.surface }, roundAction: { alignItems: "center", backgroundColor: colors.surface, borderRadius: 22, elevation: 2, height: 44, justifyContent: "center", width: 44 }, roundActionText: { color: colors.forest, fontSize: 23, fontWeight: "700" }, locationAction: { alignItems: "center", backgroundColor: colors.surface, borderRadius: 24, elevation: 2, height: 48, justifyContent: "center", width: 48 }, locationActionText: { color: colors.destination, fontSize: 25, fontWeight: "800" },
   legend: { alignItems: "flex-start", gap: 7, maxWidth: 250, position: "absolute" }, legendButton: { backgroundColor: "rgba(255,255,255,0.97)", borderRadius: 11, elevation: 2, paddingHorizontal: 10, paddingVertical: 9 }, legendButtonText: { color: colors.forest, fontSize: 9, fontWeight: "900", letterSpacing: 0.7 }, legendCard: { backgroundColor: "rgba(255,255,255,0.97)", borderRadius: 14, gap: 8, padding: 12, width: 235 }, legendTitle: { color: colors.forestAccent, fontSize: 9, fontWeight: "900", letterSpacing: 0.8 }, legendRow: { alignItems: "center", flexDirection: "row", gap: 9 }, legendSignal: { alignItems: "center", borderRadius: 12, borderWidth: 2, height: 24, justifyContent: "center", width: 24 }, legendCore: { borderRadius: 5, height: 10, width: 10 }, legendLabel: { color: "#435148", fontSize: 11, fontWeight: "700" }, legendNote: { color: "#66736B", fontSize: 10, lineHeight: 14, marginTop: 2 },
   mapHint: { backgroundColor: "rgba(255,255,255,0.97)", borderRadius: 14, padding: 13 }, mapHintTitle: { color: "#1B3020", fontSize: 13, fontWeight: "800" }, mapHintText: { color: "#647168", fontSize: 11, lineHeight: 16, marginTop: 4 },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, bottom: 0, left: 0, paddingBottom: 20, paddingTop: 18, position: "absolute", right: 0 }, sheetLandscape: { borderRadius: 24, bottom: 16, left: undefined }, handle: { alignSelf: "center", backgroundColor: "#D8E0DA", borderRadius: 2, height: 4, marginBottom: 14, width: 36 }, sheetHeader: { alignItems: "flex-start", flexDirection: "row", justifyContent: "space-between" }, sheetHeaderCopy: { flex: 1, paddingRight: 12 }, sheetEyebrow: { color: colors.forestAccent, fontSize: 10, fontWeight: "800", letterSpacing: 1.2 }, sheetTitle: { color: colors.charcoal, fontSize: 20, fontWeight: "800", marginTop: 3 }, close: { color: "#506056", fontSize: 28, lineHeight: 28 }, observed: { color: "#5D6D62", fontSize: 12, marginTop: 5 }, details: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 14 }, detail: { backgroundColor: "#F3F7F4", borderRadius: 10, flexGrow: 1, gap: 3, minWidth: "29%", padding: 10 }, detailLabel: { color: "#6A766D", fontSize: 9, fontWeight: "800", letterSpacing: 0.8 }, detailValue: { color: "#203326", fontSize: 11, fontWeight: "800" }, detailButton: { alignItems: "center", backgroundColor: "#E8F2EA", borderRadius: 12, flexDirection: "row", justifyContent: "space-between", marginTop: 13, padding: 13 }, detailButtonText: { color: colors.forestAccent, fontSize: 13, fontWeight: "800" }, destinationNote: { color: "#65736A", fontSize: 11, lineHeight: 16, marginTop: 11 },

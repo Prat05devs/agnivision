@@ -16,7 +16,18 @@ test("device registration creates a protected record and rejects a different sec
   globalThis.fetch = async (_input, init) => {
     const [operation, key, ...args] = JSON.parse(String(init?.body)) as string[];
     let result: unknown = null;
-    if (operation === "GET") {
+    if (operation === "EVAL") {
+      const [, recordKey, setKey, raw, fieldsJson, id] = args;
+      const incoming = JSON.parse(raw!);
+      const current = values.has(recordKey!) ? JSON.parse(values.get(recordKey!)!) : null;
+      if (current && current.secretHash !== incoming.secretHash) result = 0;
+      else {
+        for (const field of JSON.parse(fieldsJson!)) if (current) current[field] = incoming[field];
+        values.set(recordKey!, JSON.stringify(current ?? incoming));
+        const members = sets.get(setKey!) ?? new Set<string>();
+        members.add(id!); sets.set(setKey!, members); result = 1;
+      }
+    } else if (operation === "GET") {
       result = values.get(key!) ?? null;
     } else if (operation === "SET") {
       values.set(key!, args[0]!);
@@ -63,6 +74,10 @@ test("device registration creates a protected record and rejects a different sec
     const unauthorized = await notificationDevice.fetch(request("b".repeat(64)));
     assert.equal(unauthorized.status, 401);
     assert.deepEqual(await unauthorized.json(), { error: "Device authentication failed." });
+
+    values.clear();
+    const competing = await Promise.all([notificationDevice.fetch(request(secret)), notificationDevice.fetch(request("b".repeat(64)))]);
+    assert.deepEqual(competing.map((response) => response.status).sort(), [200, 401], "only one secret can claim a new installation");
   } finally {
     globalThis.fetch = originalFetch;
     if (originalUrl === undefined) delete process.env.UPSTASH_REDIS_REST_URL;
