@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>AgniVision API</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f4f7f3;
+        color: #123d2d;
+      }
+
+      body {
+        display: grid;
+        min-height: 100vh;
+        margin: 0;
+        place-items: center;
+      }
+
+      main {
+        width: min(32rem, calc(100% - 3rem));
+        padding: 2rem;
+        border: 1px solid #d8e2da;
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 1rem 3rem rgb(18 61 45 / 8%);
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        color: #246b45;
+        font-weight: 700;
+      }
+
+      .status::before {
+        width: 0.7rem;
+        height: 0.7rem;
+        border-radius: 50%;
+        background: #22a45d;
+        content: "";
+      }
+
+      h1 {
+        margin: 0.8rem 0 0.5rem;
+        font-size: clamp(2rem, 8vw, 3rem);
+      }
+
+      p {
+        margin: 0;
+        color: #587065;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="status">Operational</div>
+      <h1>AgniVision API</h1>
+      <p>This service securely provides live data to the AgniVision mobile application.</p>
+    </main>
+  </body>
+</html>
