@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { selectionHaptic } from "../services/haptics";
 import type { TimeWindow } from "../types/fire";
+import { font } from "../theme/typography";
 
 type TimeWindowPickerProps = {
   value: TimeWindow;
@@ -50,6 +51,6 @@ const styles = StyleSheet.create({
   },
   optionSelected: { backgroundColor: "#14532D" },
   pressed: { opacity: 0.7 },
-  label: { color: "#3F4A43", fontSize: 12, fontWeight: "700" },
+  label: { color: "#3F4A43", fontSize: 12, ...font("700") },
   labelSelected: { color: "#FFFFFF" },
 });

@@ -8,6 +8,7 @@ import { featuredDestinations } from "../data/destinations";
 import { getPlaceDestination, searchPlaces, type PlaceSuggestion } from "../services/placesService";
 import { useAppStore } from "../store/useAppStore";
 import type { Destination } from "../types/destination";
+import { font } from "../theme/typography";
 
 type SearchResult =
   | { kind: "place"; id: string; suggestion: PlaceSuggestion }
@@ -142,17 +143,17 @@ const styles = StyleSheet.create({
   input: { color: "#1D2E22", flex: 1, fontSize: 15, paddingVertical: 14 },
   error: { backgroundColor: "#FCEDEB", borderRadius: 10, color: "#8B1E17", fontSize: 12, lineHeight: 18, padding: 10 },
   labelRow: { alignItems: "center", flexDirection: "row", gap: 10, justifyContent: "space-between", marginTop: 10 },
-  label: { color: "#68766D", flex: 1, fontSize: 10, fontWeight: "800", letterSpacing: 1.1 },
-  resultCount: { color: "#68766D", fontSize: 11, fontWeight: "700" },
+  label: { color: "#68766D", flex: 1, fontSize: 10, ...font("800"), letterSpacing: 1.1 },
+  resultCount: { color: "#68766D", fontSize: 11, ...font("700") },
   result: { alignItems: "center", backgroundColor: "#FFFFFF", borderColor: "#E5EBE6", borderRadius: 16, borderWidth: 1, flexDirection: "row", gap: 12, padding: 15 },
   pressed: { backgroundColor: "#F3F8F4" },
   pin: { alignItems: "center", backgroundColor: "#E5F2E8", borderRadius: 14, height: 32, justifyContent: "center", width: 32 },
-  pinText: { color: "#196239", fontSize: 19, fontWeight: "700" },
+  pinText: { color: "#196239", fontSize: 19, ...font("700") },
   resultCopy: { flex: 1, gap: 3 },
-  name: { color: "#1C2C20", fontSize: 15, fontWeight: "800" },
+  name: { color: "#1C2C20", fontSize: 15, ...font("800") },
   region: { color: "#68766D", fontSize: 12 },
   chevron: { color: "#17633A", fontSize: 25 },
   empty: { backgroundColor: "#F2F6F3", borderRadius: 16, gap: 5, padding: 16 },
-  emptyTitle: { color: "#35463B", fontSize: 14, fontWeight: "800", lineHeight: 20 },
+  emptyTitle: { color: "#35463B", fontSize: 14, ...font("800"), lineHeight: 20 },
   emptyText: { color: "#66736B", fontSize: 12, lineHeight: 17 },
 });

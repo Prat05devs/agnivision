@@ -35,6 +35,7 @@ const config: ExpoConfig = {
   platforms: ["ios", "android"],
   plugins: [
     mapsPlugin,
+    "expo-font",
     [
       "expo-location",
       {
@@ -86,7 +87,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: "live.agnivision.app",
-    versionCode: 2,
+    versionCode: 3,
     adaptiveIcon: {
       foregroundImage: androidAdaptiveIcon,
       backgroundColor: "#0D121C",

@@ -4,6 +4,7 @@ import { Platform } from "react-native";
 
 import type { LocationPermissionLevel } from "../types/notification";
 import { clearServerLocation, uploadCoarseLocation } from "./apiClient";
+import { runLocalProximityCheck } from "./localProximityAlerts";
 
 export const BACKGROUND_LOCATION_TASK = "agnivision-coarse-location-update";
 
@@ -18,10 +19,14 @@ if (!TaskManager.isTaskDefined(BACKGROUND_LOCATION_TASK)) {
     if (!latest) {
       return;
     }
-    await uploadCoarseLocation({
+    const coordinate = {
       latitude: latest.coords.latitude,
       longitude: latest.coords.longitude,
-    }).catch(() => undefined);
+    };
+    // The upload keeps server-side alerting working where push is configured; the
+    // local check makes proximity alerts work on this device regardless.
+    await uploadCoarseLocation(coordinate).catch(() => undefined);
+    await runLocalProximityCheck(coordinate);
   });
 }
 

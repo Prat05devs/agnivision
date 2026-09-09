@@ -62,12 +62,6 @@ export async function configureNotificationCategories() {
       }),
     ]);
   }
-
-  await Promise.all(
-    ["proximity", "destination", "regional", "digest", "system", "advisory"].map((category) =>
-      Notifications.setNotificationCategoryAsync(category, []),
-    ),
-  );
 }
 
 export async function getNotificationPermissionState(): Promise<NotificationPermissionState> {
@@ -113,7 +107,6 @@ export async function scheduleTestNotification() {
     content: {
       title: "AgniVision notification test",
       body: "Notifications are configured correctly on this device.",
-      categoryIdentifier: "system",
       data: {
         inboxEntry: {
           id: `notification-test-${Date.now()}`,

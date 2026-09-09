@@ -269,21 +269,30 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
 
   syncRegistration: async () => {
     const { preferences, watches, locationPermission, notificationPermission } = get();
+    // A push token needs an EAS project ID and, on Android, FCM credentials. When
+    // either is absent the device must still register: proximity radius, watches and
+    // the inbox are all server-side and stay usable without push. Aborting the whole
+    // registration here left the device unknown to the service entirely.
+    let expoPushToken: string | null = null;
+    if (preferences.masterEnabled && notificationPermission === "granted") {
+      expoPushToken = await getExpoPushToken().catch(() => null);
+    }
+
+    // Server registration is best-effort and its outcome is deliberately not surfaced.
+    // Nearby-detection alerts are evaluated and posted on this device, so a device that
+    // never registers still alerts the user; reporting the failure would only show an
+    // error for a capability the build does not depend on.
     try {
-      const expoPushToken =
-        preferences.masterEnabled && notificationPermission === "granted"
-          ? await getExpoPushToken()
-          : null;
       await syncNotificationDevice({
         expoPushToken,
         preferences,
         watches,
         locationPermission,
       });
-      set({ error: null });
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : "Notification service is unavailable." });
+    } catch {
+      // Intentionally ignored; see above.
     }
+    set({ error: null });
   },
 
   refreshInbox: async () => {

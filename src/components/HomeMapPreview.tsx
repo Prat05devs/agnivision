@@ -4,6 +4,7 @@ import MapView, { Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from "react-native
 
 import { ThermalHeatLayer } from "./ThermalHeatLayer";
 import { FireMapMarker } from "./FireMapMarker";
+import { TrackedMarker } from "./TrackedMarker";
 import { clusterDetections, isCoordinateInIndiaScope } from "../map/clustering";
 import { AGNIVISION_GOOGLE_MAP_STYLE } from "../map/googleMapStyle";
 import { googleMapsEnabled, useIosDevelopmentMapKit } from "../map/provider";
@@ -11,6 +12,8 @@ import { selectionHaptic } from "../services/haptics";
 import { useAppStore } from "../store/useAppStore";
 import { filterDetections } from "../utils/fire";
 import { intensityLabel } from "../utils/intensity";
+import { font } from "../theme/typography";
+import { shadow } from "../theme/elevation";
 
 export function HomeMapPreview() {
   const mapRef = useRef<MapView>(null);
@@ -67,17 +70,16 @@ export function HomeMapPreview() {
         {nodes.map((node) => {
           if (node.kind === "cluster") return null;
           return (
-            <Marker
+            <TrackedMarker
               anchor={{ x: 0.5, y: 1 }}
               key={node.detection.id}
               accessibilityLabel={`Recent satellite observation, ${intensityLabel(node.detection.intensityLevel)} intensity`}
               coordinate={{ latitude: node.detection.latitude, longitude: node.detection.longitude }}
               onPress={() => showDetectionOnMap(node.detection.id)}
               stopPropagation
-              tracksViewChanges={false}
             >
               <FireMapMarker compact />
-            </Marker>
+            </TrackedMarker>
           );
         })}
       </MapView>
@@ -103,15 +105,15 @@ export function HomeMapPreview() {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: "#E7EEE8", borderRadius: 22, elevation: 2, overflow: "hidden", position: "relative" },
+  card: { backgroundColor: "#E7EEE8", borderRadius: 22, ...shadow(2), overflow: "hidden", position: "relative" },
   contextBadge: { alignItems: "center", backgroundColor: "rgba(255,255,255,0.95)", borderRadius: 14, flexDirection: "row", gap: 9, left: 12, paddingHorizontal: 12, paddingVertical: 10, position: "absolute", top: 12 },
   liveDot: { backgroundColor: "#1F9A55", borderRadius: 5, height: 9, width: 9 },
-  contextTitle: { color: "#163820", fontSize: 12, fontWeight: "900" },
-  contextCopy: { color: "#617067", fontSize: 9, fontWeight: "700", marginTop: 1 },
+  contextTitle: { color: "#163820", fontSize: 12, ...font("900") },
+  contextCopy: { color: "#617067", fontSize: 9, ...font("700"), marginTop: 1 },
   openButton: { alignItems: "center", backgroundColor: "#14532D", borderRadius: 13, bottom: 12, flexDirection: "row", gap: 10, justifyContent: "space-between", minHeight: 44, paddingHorizontal: 14, position: "absolute", right: 12 },
-  openButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900" },
+  openButtonText: { color: "#FFFFFF", fontSize: 12, ...font("900") },
   pressed: { opacity: 0.72 },
   unavailable: { backgroundColor: "#E8F1EA", borderRadius: 22, gap: 5, minHeight: 220, padding: 22, justifyContent: "center" },
-  unavailableTitle: { color: "#173820", fontSize: 22, fontWeight: "900" },
+  unavailableTitle: { color: "#173820", fontSize: 22, ...font("900") },
   unavailableCopy: { color: "#5D6D62", fontSize: 13, lineHeight: 19 },
 });

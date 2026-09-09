@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Constants from "expo-constants";
+import { font } from "../theme/typography";
 
 export function InfoScreen({ embedded = false }: { embedded?: boolean }) {
   const [sourcesExpanded, setSourcesExpanded] = useState(false);
@@ -74,21 +75,21 @@ function InfoCard({ title, body }: { title: string; body: string }) {
 
 const styles = StyleSheet.create({
   content: { alignSelf: "center", backgroundColor: "#FBFCFB", gap: 14, maxWidth: 760, padding: 20, paddingBottom: 32, width: "100%" },
-  eyebrow: { color: "#17633A", fontSize: 11, fontWeight: "800", letterSpacing: 1.4 },
-  title: { color: "#17271B", fontSize: 29, fontWeight: "800", letterSpacing: -0.8, marginTop: 4 },
+  eyebrow: { color: "#17633A", fontSize: 11, ...font("800"), letterSpacing: 1.4 },
+  title: { color: "#17271B", fontSize: 29, ...font("800"), letterSpacing: -0.8, marginTop: 4 },
   lead: { color: "#607066", fontSize: 14, lineHeight: 21, marginTop: 10 },
   card: { backgroundColor: "#FFFFFF", borderColor: "#E4EAE5", borderRadius: 16, borderWidth: 1, gap: 6, padding: 16 },
-  cardTitle: { color: "#1D3022", fontSize: 15, fontWeight: "800" },
+  cardTitle: { color: "#1D3022", fontSize: 15, ...font("800") },
   cardBody: { color: "#5E6D63", fontSize: 13, lineHeight: 19 },
   sourcesCard: { backgroundColor: "#FFFFFF", borderColor: "#E4EAE5", borderRadius: 16, borderWidth: 1, overflow: "hidden" },
   sourcesButton: { alignItems: "center", flexDirection: "row", minHeight: 68, padding: 16 },
   sourcesButtonCopy: { flex: 1, gap: 5, paddingRight: 12 },
-  sourcesGlyph: { color: "#17633A", fontSize: 24, fontWeight: "700" },
+  sourcesGlyph: { color: "#17633A", fontSize: 24, ...font("700") },
   sourcesContent: { borderTopColor: "#E7ECE8", borderTopWidth: 1, gap: 6, padding: 16 },
-  sourceTitle: { color: "#1D3022", fontSize: 13, fontWeight: "800", marginTop: 5 },
+  sourceTitle: { color: "#1D3022", fontSize: 13, ...font("800"), marginTop: 5 },
   pressed: { opacity: 0.7 },
   importantNote: { backgroundColor: "#FFF4E3", borderRadius: 16, gap: 6, padding: 16 },
-  noteTitle: { color: "#7D4B00", fontSize: 14, fontWeight: "800" },
+  noteTitle: { color: "#7D4B00", fontSize: 14, ...font("800") },
   noteText: { color: "#754E12", fontSize: 13, lineHeight: 19 },
-  version: { color: "#849087", fontSize: 11, fontWeight: "700", marginTop: 6, textAlign: "center" },
+  version: { color: "#849087", fontSize: 11, ...font("700"), marginTop: 6, textAlign: "center" },
 });

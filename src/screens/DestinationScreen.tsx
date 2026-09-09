@@ -4,7 +4,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DataStatusBanner } from "../components/DataStatusBanner";
 import { DetectionCard } from "../components/DetectionCard";
-import { DestinationImageSlider } from "../components/DestinationImageSlider";
 import { FlowHeader } from "../components/FlowHeader";
 import { OfficialAdvisoriesSection } from "../components/OfficialAdvisoriesSection";
 import { selectionHaptic } from "../services/haptics";
@@ -18,6 +17,7 @@ import {
 } from "../utils/destinationActivity";
 import { formatDistanceKm } from "../utils/fire";
 import { advisoriesForDestination } from "../utils/advisory";
+import { font } from "../theme/typography";
 
 export function DestinationScreen() {
   const insets = useSafeAreaInsets();
@@ -72,7 +72,6 @@ export function DestinationScreen() {
     <View style={styles.screen}>
       <FlowHeader eyebrow="DESTINATION" title={destination.name} onBack={closeOverlay} />
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.content, { paddingBottom: 32 + (Platform.OS === "android" ? insets.bottom : 0) }]} showsVerticalScrollIndicator={false}>
-        <DestinationImageSlider destination={destination} />
         <Text style={styles.region}>{destination.region}</Text>
         <DataStatusBanner status={dataStatus} fetchedAtUtc={lastFetchedAtUtc} error={dataError} />
 
@@ -144,32 +143,32 @@ export function DestinationScreen() {
 const styles = StyleSheet.create({
   screen: { backgroundColor: "#FBFCFB", flex: 1 },
   content: { alignSelf: "center", gap: 15, maxWidth: 760, padding: 20, paddingTop: 10, width: "100%" },
-  region: { color: "#617066", fontSize: 13, fontWeight: "600", marginTop: -8 },
+  region: { color: "#617066", fontSize: 13, ...font("600"), marginTop: -8 },
   summary: { backgroundColor: "#14532D", borderRadius: 22, gap: 7, padding: 20 },
-  summaryOverline: { color: "#B9E4C3", fontSize: 10, fontWeight: "800", letterSpacing: 1.2 },
-  summaryCount: { color: "#FFFFFF", fontSize: 47, fontWeight: "800", letterSpacing: -1.4, lineHeight: 53 },
+  summaryOverline: { color: "#B9E4C3", fontSize: 10, ...font("800"), letterSpacing: 1.2 },
+  summaryCount: { color: "#FFFFFF", fontSize: 47, ...font("800"), letterSpacing: -1.4, lineHeight: 53 },
   summaryCopy: { color: "#D9F0DF", fontSize: 13, lineHeight: 19 },
   nearest: { backgroundColor: "rgba(255,255,255,0.12)", borderRadius: 10, gap: 3, marginTop: 7, padding: 11 },
-  nearestLabel: { color: "#B9E4C3", fontSize: 9, fontWeight: "800", letterSpacing: 0.9 },
-  nearestValue: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" },
+  nearestLabel: { color: "#B9E4C3", fontSize: 9, ...font("800"), letterSpacing: 0.9 },
+  nearestValue: { color: "#FFFFFF", fontSize: 14, ...font("800") },
   mapButton: { alignItems: "center", backgroundColor: "#E8F2EA", borderRadius: 13, flexDirection: "row", justifyContent: "space-between", padding: 15 },
-  mapButtonText: { color: "#17633A", fontSize: 13, fontWeight: "800" },
+  mapButtonText: { color: "#17633A", fontSize: 13, ...font("800") },
   watchButton: { alignItems: "center", borderColor: "#B8C9BC", borderRadius: 13, borderWidth: 1, flexDirection: "row", justifyContent: "space-between", padding: 15 },
   watchButtonActive: { backgroundColor: "#14532D", borderColor: "#14532D" },
-  watchButtonText: { color: "#17633A", fontSize: 13, fontWeight: "800" },
+  watchButtonText: { color: "#17633A", fontSize: 13, ...font("800") },
   watchButtonTextActive: { color: "#FFFFFF" },
   pressed: { opacity: 0.72 },
   sectionHeader: { alignItems: "baseline", flexDirection: "row", justifyContent: "space-between", marginTop: 2 },
-  sectionTitle: { color: "#1A2A1E", fontSize: 17, fontWeight: "800" },
-  radius: { color: "#68766D", fontSize: 11, fontWeight: "700" },
+  sectionTitle: { color: "#1A2A1E", fontSize: 17, ...font("800") },
+  radius: { color: "#68766D", fontSize: 11, ...font("700") },
   empty: { backgroundColor: "#EAF5EC", borderRadius: 16, gap: 5, padding: 16 },
-  emptyTitle: { color: "#17633A", fontSize: 14, fontWeight: "800", lineHeight: 20 },
+  emptyTitle: { color: "#17633A", fontSize: 14, ...font("800"), lineHeight: 20 },
   emptyText: { color: "#66736B", fontSize: 12, lineHeight: 17 },
   methodology: { borderTopColor: "#E1E7E2", borderTopWidth: 1, gap: 4, marginTop: 3, paddingTop: 15 },
-  methodologyTitle: { color: "#3F5045", fontSize: 12, fontWeight: "800" },
+  methodologyTitle: { color: "#3F5045", fontSize: 12, ...font("800") },
   methodologyText: { color: "#67756B", fontSize: 12, lineHeight: 18 },
   missing: { alignItems: "flex-start", gap: 14, padding: 20 },
-  missingTitle: { color: "#35463B", fontSize: 16, fontWeight: "800" },
+  missingTitle: { color: "#35463B", fontSize: 16, ...font("800") },
   primaryButton: { backgroundColor: "#14532D", borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12 },
-  primaryButtonText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
+  primaryButtonText: { color: "#FFFFFF", fontSize: 13, ...font("800") },
 });

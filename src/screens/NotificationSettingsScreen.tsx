@@ -7,6 +7,7 @@ import { scheduleTestNotification } from "../notifications/notificationService";
 import { useAppStore } from "../store/useAppStore";
 import { useNotificationStore } from "../store/useNotificationStore";
 import type { MinimumNotificationSeverity, NotificationPreferences } from "../types/notification";
+import { font } from "../theme/typography";
 
 const RADII = [5, 10, 25, 50] as const;
 const SEVERITIES: Array<{ value: MinimumNotificationSeverity; label: string }> = [
@@ -43,6 +44,11 @@ export function NotificationSettingsScreen() {
     updatePreferences({ quietHours: { ...preferences.quietHours, ...patch } });
 
   const sendTestNotification = async () => {
+    if (permission === "denied") {
+      await Linking.openSettings();
+      return;
+    }
+
     setTestPending(true);
     try {
       await scheduleTestNotification();
@@ -82,7 +88,7 @@ export function NotificationSettingsScreen() {
             <Text style={styles.testStatusText}>{permission === "granted" ? "Device permission granted" : permission === "denied" ? "Permission blocked in device settings" : "Permission not granted yet"}</Text>
           </View>
           <Pressable disabled={testPending} onPress={() => void sendTestNotification()} style={({ pressed }) => [styles.primaryButton, (pressed || testPending) && styles.buttonPressed]}>
-            <Text style={styles.primaryButtonText}>{testPending ? "Scheduling…" : "Send test notification"}</Text>
+            <Text style={styles.primaryButtonText}>{testPending ? "Scheduling…" : permission === "denied" ? "Open notification settings" : "Send test notification"}</Text>
           </Pressable>
           <Text style={styles.testHint}>The alert should arrive after 3 seconds and appear in the notification inbox.</Text>
         </Section>
@@ -180,40 +186,40 @@ const styles = StyleSheet.create({
   screen: { backgroundColor: "#F8F9FC", flex: 1 },
   content: { alignSelf: "center", gap: 14, maxWidth: 760, padding: 18, width: "100%" },
   section: { backgroundColor: "#FFFFFF", borderColor: "#E3E9E4", borderRadius: 18, borderWidth: 1, gap: 13, padding: 16 },
-  sectionTitle: { color: "#18301F", fontSize: 17, fontWeight: "800" },
+  sectionTitle: { color: "#18301F", fontSize: 17, ...font("800") },
   sectionBody: { color: "#65736A", fontSize: 12, lineHeight: 18, marginTop: -7 },
   settingRow: { alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" },
   settingCopy: { flex: 1 },
-  settingTitle: { color: "#213428", fontSize: 14, fontWeight: "800" },
+  settingTitle: { color: "#213428", fontSize: 14, ...font("800") },
   settingBody: { color: "#6A786F", fontSize: 11, lineHeight: 16, marginTop: 3 },
-  fieldLabel: { color: "#6C786F", fontSize: 9, fontWeight: "900", letterSpacing: 1 },
+  fieldLabel: { color: "#6C786F", fontSize: 9, ...font("900"), letterSpacing: 1 },
   options: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
   option: { backgroundColor: "#EEF2EF", borderRadius: 14, paddingHorizontal: 11, paddingVertical: 8 },
   optionSelected: { backgroundColor: "#14532D" },
-  optionText: { color: "#536159", fontSize: 11, fontWeight: "800" },
+  optionText: { color: "#536159", fontSize: 11, ...font("800") },
   optionTextSelected: { color: "#FFFFFF" },
   primaryButton: { alignItems: "center", backgroundColor: "#14532D", borderRadius: 12, padding: 13 },
-  primaryButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
+  primaryButtonText: { color: "#FFFFFF", fontSize: 12, ...font("800") },
   inlineActions: { flexDirection: "row", flexWrap: "wrap", gap: 18 },
-  textButton: { color: "#17633A", fontSize: 12, fontWeight: "800" },
-  destructiveText: { color: "#A13C31", fontSize: 12, fontWeight: "800" },
+  textButton: { color: "#17633A", fontSize: 12, ...font("800") },
+  destructiveText: { color: "#A13C31", fontSize: 12, ...font("800") },
   watch: { borderTopColor: "#E4E9E5", borderTopWidth: 1, gap: 10, paddingTop: 12 },
   watchHeader: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
   watchCopy: { flex: 1 },
-  watchName: { color: "#213428", fontSize: 14, fontWeight: "800" },
+  watchName: { color: "#213428", fontSize: 14, ...font("800") },
   watchRegion: { color: "#6B776F", fontSize: 11, marginTop: 2 },
   hourRow: { flexDirection: "row", gap: 10 },
   hourControl: { flex: 1, gap: 6 },
   hourButtons: { alignItems: "center", backgroundColor: "#EFF3F0", borderRadius: 12, flexDirection: "row", justifyContent: "space-between", padding: 5 },
   hourButton: { alignItems: "center", backgroundColor: "#FFFFFF", borderRadius: 8, height: 30, justifyContent: "center", width: 30 },
-  hourButtonText: { color: "#17633A", fontSize: 18, fontWeight: "800" },
-  hourValue: { color: "#24372A", fontSize: 11, fontWeight: "800" },
+  hourButtonText: { color: "#17633A", fontSize: 18, ...font("800") },
+  hourValue: { color: "#24372A", fontSize: 11, ...font("800") },
   empty: { color: "#6A776E", fontSize: 12, lineHeight: 18 },
   error: { backgroundColor: "#FCEDEB", borderRadius: 12, color: "#8C2E27", fontSize: 12, lineHeight: 18, padding: 12 },
   testStatus: { alignItems: "center", flexDirection: "row", gap: 8 },
   statusDot: { backgroundColor: "#B56B24", borderRadius: 5, height: 10, width: 10 },
   statusDotGranted: { backgroundColor: "#2F7D45" },
-  testStatusText: { color: "#536159", flex: 1, fontSize: 12, fontWeight: "700" },
+  testStatusText: { color: "#536159", flex: 1, fontSize: 12, ...font("700") },
   testHint: { color: "#748078", fontSize: 11, lineHeight: 16 },
   buttonPressed: { opacity: 0.7 },
   footnote: { color: "#748078", fontSize: 11, lineHeight: 17, textAlign: "center" },

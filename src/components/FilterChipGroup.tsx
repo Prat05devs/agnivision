@@ -1,6 +1,7 @@
 import { ScrollView, Pressable, StyleSheet, Text } from "react-native";
 
 import { selectionHaptic } from "../services/haptics";
+import { font } from "../theme/typography";
 
 type FilterChipGroupProps<T extends string> = {
   accessibilityLabel: string;
@@ -50,6 +51,6 @@ const styles = StyleSheet.create({
   chip: { backgroundColor: "#F0F4F1", borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8 },
   selectedChip: { backgroundColor: "#14532D" },
   pressed: { opacity: 0.7 },
-  label: { color: "#445149", fontSize: 12, fontWeight: "700" },
+  label: { color: "#445149", fontSize: 12, ...font("700") },
   selectedLabel: { color: "#FFFFFF" },
 });

@@ -4,6 +4,7 @@ import { useDetectionAreaLabel } from "../hooks/useDetectionAreaLabel";
 import type { FireDetection } from "../types/fire";
 import { formatConfidence, formatObservationTime } from "../utils/fire";
 import { intensityLabel } from "../utils/intensity";
+import { font } from "../theme/typography";
 
 type DetectionCardProps = {
   detection: FireDetection;
@@ -66,10 +67,10 @@ const styles = StyleSheet.create({
   iconText: { color: "#C8540A", fontSize: 30, lineHeight: 24 },
   body: { flex: 1, gap: 3 },
   row: { alignItems: "baseline", flexDirection: "row", gap: 8, justifyContent: "space-between" },
-  sensor: { color: "#17221A", fontSize: 13, fontWeight: "800" },
-  time: { color: "#5E6B62", fontSize: 11, fontWeight: "600" },
-  area: { color: "#1A4F2D", fontSize: 14, fontWeight: "900", lineHeight: 19, marginTop: 2 },
-  areaBasis: { color: "#7A867E", fontSize: 8, fontWeight: "800", letterSpacing: 0.35, textTransform: "uppercase" },
+  sensor: { color: "#17221A", fontSize: 13, ...font("800") },
+  time: { color: "#5E6B62", fontSize: 11, ...font("600") },
+  area: { color: "#1A4F2D", fontSize: 14, ...font("900"), lineHeight: 19, marginTop: 2 },
+  areaBasis: { color: "#7A867E", fontSize: 8, ...font("800"), letterSpacing: 0.35, textTransform: "uppercase" },
   meta: { color: "#657168", fontSize: 12, lineHeight: 17 },
-  chevron: { color: "#597060", fontSize: 26, fontWeight: "400" },
+  chevron: { color: "#597060", fontSize: 26, ...font("400") },
 });
