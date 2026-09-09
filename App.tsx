@@ -2,6 +2,15 @@ import { useEffect, useState } from "react";
 import { AppState, BackHandler, Platform, StyleSheet, View } from "react-native";
 import { NavigationContainer, useIsFocused } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold,
+  Inter_900Black,
+  useFonts,
+} from "@expo-google-fonts/inter";
 import * as Notifications from "expo-notifications";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { StatusBar } from "expo-status-bar";
@@ -22,6 +31,7 @@ import { NotificationInboxScreen } from "./src/screens/NotificationInboxScreen";
 import { NotificationSettingsScreen } from "./src/screens/NotificationSettingsScreen";
 import { SearchScreen } from "./src/screens/SearchScreen";
 import { uploadCoarseLocation } from "./src/notifications/apiClient";
+import { runLocalProximityCheck } from "./src/notifications/localProximityAlerts";
 import { getMainBackAction } from "./src/navigation/backPolicy";
 import { flushPendingNavigation, navigationRef, type RootStackParamList } from "./src/navigation/rootNavigation";
 import { useAppStore } from "./src/store/useAppStore";
@@ -33,6 +43,15 @@ const DATA_REFRESH_INTERVAL_MS = 10 * 60 * 1000;
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
+  // Android selects an explicit Inter face per weight; see src/theme/typography.ts.
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_800ExtraBold,
+    Inter_900Black,
+  });
   const activeTab = useAppStore((state) => state.activeTab);
   const [currentRoute, setCurrentRoute] = useState<keyof RootStackParamList>("Main");
   const refreshDetections = useAppStore((state) => state.refreshDetections);
@@ -54,6 +73,8 @@ export default function App() {
       const currentNotifications = useNotificationStore.getState();
       if (location && currentNotifications.preferences.proximityEnabled && currentNotifications.locationPermission !== "off") {
         await uploadCoarseLocation(location, locationLabel).catch(() => undefined);
+        // Covers the while-using case, where no background task is registered.
+        await runLocalProximityCheck(location);
       }
     };
 
@@ -136,6 +157,13 @@ export default function App() {
     void updateOrientation();
   }, [activeTab, currentRoute]);
 
+  // Held until the Inter faces are registered so Android never paints a first
+  // frame in the fallback system font. A load failure falls through rather than
+  // blocking launch: the type scale degrades, the app still works.
+  if (!fontsLoaded && !fontError) {
+    return <View style={styles.bootSplash} />;
+  }
+
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
@@ -213,4 +241,5 @@ const styles = StyleSheet.create({
   shell: { backgroundColor: "#F8F9FC", flex: 1 },
   content: { flex: 1 },
   screenBackground: { backgroundColor: "#F8F9FC" },
+  bootSplash: { backgroundColor: "#F8F9FC", flex: 1 },
 });

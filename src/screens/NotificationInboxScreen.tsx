@@ -5,6 +5,7 @@ import { FlowHeader } from "../components/FlowHeader";
 import { useAppStore } from "../store/useAppStore";
 import { useNotificationStore } from "../store/useNotificationStore";
 import type { NotificationCategory } from "../types/notification";
+import { font } from "../theme/typography";
 
 const categoryLabels: Record<NotificationCategory, string> = {
   proximity: "Nearby",
@@ -47,17 +48,17 @@ const styles = StyleSheet.create({
   screen: { backgroundColor: "#F8F9FC", flex: 1 },
   content: { alignSelf: "center", gap: 10, maxWidth: 760, padding: 18, width: "100%" },
   readButton: { alignSelf: "flex-end", paddingHorizontal: 5, paddingVertical: 4 },
-  readButtonText: { color: "#17633A", fontSize: 12, fontWeight: "800" },
+  readButtonText: { color: "#17633A", fontSize: 12, ...font("800") },
   entry: { backgroundColor: "#FFFFFF", borderColor: "#E1E7E2", borderRadius: 16, borderWidth: 1, gap: 7, padding: 15 },
   unread: { borderColor: "#63A274", borderLeftWidth: 4 },
   pressed: { opacity: 0.72 },
   meta: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
-  category: { color: "#17633A", fontSize: 9, fontWeight: "900", letterSpacing: 1, textTransform: "uppercase" },
+  category: { color: "#17633A", fontSize: 9, ...font("900"), letterSpacing: 1, textTransform: "uppercase" },
   time: { color: "#7B877F", fontSize: 10 },
-  title: { color: "#1D3022", fontSize: 15, fontWeight: "800" },
+  title: { color: "#1D3022", fontSize: 15, ...font("800") },
   body: { color: "#5F6E64", fontSize: 12, lineHeight: 18 },
-  paced: { color: "#8A670E", fontSize: 10, fontWeight: "700" },
+  paced: { color: "#8A670E", fontSize: 10, ...font("700") },
   empty: { backgroundColor: "#EEF4EF", borderRadius: 16, gap: 6, padding: 18 },
-  emptyTitle: { color: "#24422E", fontSize: 15, fontWeight: "800" },
+  emptyTitle: { color: "#24422E", fontSize: 15, ...font("800") },
   emptyBody: { color: "#68756D", fontSize: 12, lineHeight: 18 },
 });

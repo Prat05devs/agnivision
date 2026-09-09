@@ -2,6 +2,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { OfficialAdvisory } from "../types/advisory";
 import { advisorySeverityColor, advisorySeverityLabel, formatAdvisoryTime } from "../utils/advisory";
+import { font } from "../theme/typography";
+import { tintedCard } from "../theme/elevation";
 
 export function AdvisoryCard({ advisory, onPress }: { advisory: OfficialAdvisory; onPress: () => void }) {
   const color = advisorySeverityColor[advisory.severity];
@@ -15,7 +17,7 @@ export function AdvisoryCard({ advisory, onPress }: { advisory: OfficialAdvisory
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: `${color}0A`, borderColor: `${color}24`, shadowColor: color },
+        tintedCard(color),
         pressed && styles.pressed,
       ]}
     >
@@ -32,27 +34,19 @@ export function AdvisoryCard({ advisory, onPress }: { advisory: OfficialAdvisory
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 20,
-    borderWidth: 1,
-    elevation: 3,
-    gap: 7,
-    padding: 16,
-    shadowOffset: { height: 6, width: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 14,
-  },
+  // Depth and colour come from tintedCard(); keep this to geometry only.
+  card: { borderRadius: 20, borderWidth: 1, gap: 7, padding: 16 },
   pressed: { opacity: 0.88, transform: [{ scale: 0.99 }] },
   topRow: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
   severity: { alignItems: "center", flexDirection: "row", gap: 6 },
   dot: { borderRadius: 4, height: 7, width: 7 },
-  severityText: { fontSize: 9, fontWeight: "900", letterSpacing: 0.7, textTransform: "uppercase" },
-  source: { color: "#7A857D", fontSize: 8, fontWeight: "800", letterSpacing: 0.7 },
-  event: { color: "#1D3023", fontSize: 17, fontWeight: "800", letterSpacing: -0.25, lineHeight: 22 },
-  area: { color: "#536158", fontSize: 11, fontWeight: "700", lineHeight: 16 },
+  severityText: { fontSize: 9, ...font("900"), letterSpacing: 0.7, textTransform: "uppercase" },
+  source: { color: "#7A857D", fontSize: 8, ...font("800"), letterSpacing: 0.7 },
+  event: { color: "#1D3023", fontSize: 17, ...font("800"), letterSpacing: -0.25, lineHeight: 22 },
+  area: { color: "#536158", fontSize: 11, ...font("700"), lineHeight: 16 },
   headline: { color: "#56645B", fontSize: 12, lineHeight: 18 },
   bottomRow: { alignItems: "center", borderTopColor: "#EDF1EE", borderTopWidth: StyleSheet.hairlineWidth, flexDirection: "row", marginTop: 3, paddingTop: 10 },
-  time: { color: "#707D74", flex: 1, fontSize: 10, fontWeight: "600" },
-  openLabel: { color: "#17633A", fontSize: 10, fontWeight: "800" },
+  time: { color: "#707D74", flex: 1, fontSize: 10, ...font("600") },
+  openLabel: { color: "#17633A", fontSize: 10, ...font("800") },
   arrow: { color: "#17633A", fontSize: 20, lineHeight: 20, marginLeft: 5 },
 });

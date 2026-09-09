@@ -2,6 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-nat
 
 import { useAppStore } from "../store/useAppStore";
 import { useNotificationStore } from "../store/useNotificationStore";
+import { font } from "../theme/typography";
 
 export function MoreScreen() {
   const openSettings = useAppStore((state) => state.openNotificationSettings);
@@ -81,23 +82,23 @@ const styles = StyleSheet.create({
   screen: { backgroundColor: "#F8F9FC", flex: 1 },
   content: { alignSelf: "center", gap: 24, maxWidth: 760, padding: 20, paddingBottom: 40, width: "100%" },
   heading: { gap: 5, paddingTop: 4 },
-  eyebrow: { color: "#17633A", fontSize: 10, fontWeight: "900", letterSpacing: 1.4 },
-  title: { color: "#17271B", fontSize: 30, fontWeight: "800", letterSpacing: -0.8 },
+  eyebrow: { color: "#17633A", fontSize: 10, ...font("900"), letterSpacing: 1.4 },
+  title: { color: "#17271B", fontSize: 30, ...font("800"), letterSpacing: -0.8 },
   lead: { color: "#66736B", fontSize: 13, lineHeight: 19, marginTop: 3 },
   section: { gap: 8 },
-  sectionLabel: { color: "#68756D", fontSize: 10, fontWeight: "900", letterSpacing: 1.2, marginLeft: 4 },
+  sectionLabel: { color: "#68756D", fontSize: 10, ...font("900"), letterSpacing: 1.2, marginLeft: 4 },
   card: { backgroundColor: "#FFFFFF", borderColor: "#E1E8E3", borderRadius: 18, borderWidth: 1, overflow: "hidden" },
   row: { alignItems: "center", flexDirection: "row", gap: 12, minHeight: 72, paddingHorizontal: 15, paddingVertical: 12 },
   toggleRow: { alignItems: "center", flexDirection: "row", gap: 12, minHeight: 72, paddingHorizontal: 15, paddingVertical: 12 },
   icon: { alignItems: "center", backgroundColor: "#E8F1EA", borderRadius: 11, height: 38, justifyContent: "center", width: 38 },
-  iconText: { color: "#14532D", fontSize: 17, fontWeight: "900" },
+  iconText: { color: "#14532D", fontSize: 17, ...font("900") },
   rowCopy: { flex: 1 },
-  rowTitle: { color: "#1A2A1E", fontSize: 14, fontWeight: "800" },
+  rowTitle: { color: "#1A2A1E", fontSize: 14, ...font("800") },
   rowBody: { color: "#6A776F", fontSize: 11, lineHeight: 16, marginTop: 3 },
   divider: { backgroundColor: "#E8ECE9", height: StyleSheet.hairlineWidth, marginLeft: 65 },
   chevron: { color: "#718078", fontSize: 27, marginLeft: 2 },
   badge: { alignItems: "center", backgroundColor: "#A63B32", borderRadius: 10, minWidth: 20, paddingHorizontal: 6, paddingVertical: 2 },
-  badgeText: { color: "#FFFFFF", fontSize: 10, fontWeight: "900" },
+  badgeText: { color: "#FFFFFF", fontSize: 10, ...font("900") },
   pressed: { backgroundColor: "#F2F6F3" },
   footer: { color: "#879189", fontSize: 10, lineHeight: 16, textAlign: "center" },
 });

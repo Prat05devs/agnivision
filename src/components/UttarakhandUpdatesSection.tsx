@@ -8,6 +8,7 @@ import type { FireDetection } from "../types/fire";
 import { isAdvisoryForUttarakhand, isCoordinateInUttarakhand } from "../utils/uttarakhand";
 import { AdvisoryCard } from "./AdvisoryCard";
 import { DetectionCard } from "./DetectionCard";
+import { font } from "../theme/typography";
 
 type RegionalUpdate =
   | { kind: "detection"; occurredAt: string; value: FireDetection }
@@ -105,13 +106,13 @@ const styles = StyleSheet.create({
   section: { gap: 10 },
   heading: { alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" },
   headingCopy: { flex: 1 },
-  eyebrow: { color: "#17633A", fontSize: 9, fontWeight: "900", letterSpacing: 1.1 },
-  title: { color: "#1A2A1E", fontSize: 20, fontWeight: "900", letterSpacing: -0.3, marginTop: 3 },
+  eyebrow: { color: "#17633A", fontSize: 9, ...font("900"), letterSpacing: 1.1 },
+  title: { color: "#1A2A1E", fontSize: 20, ...font("900"), letterSpacing: -0.3, marginTop: 3 },
   summary: { color: "#66736B", fontSize: 11, lineHeight: 16, marginTop: 3 },
   regionBadge: { alignItems: "center", backgroundColor: "#E2F1E6", borderRadius: 15, height: 42, justifyContent: "center", width: 42 },
-  regionBadgeText: { color: "#17633A", fontSize: 12, fontWeight: "900", letterSpacing: 0.5 },
+  regionBadgeText: { color: "#17633A", fontSize: 12, ...font("900"), letterSpacing: 0.5 },
   emptyCard: { backgroundColor: "#F1F4F2", borderRadius: 16, gap: 5, padding: 16 },
-  emptyTitle: { color: "#324238", fontSize: 14, fontWeight: "800", lineHeight: 20 },
+  emptyTitle: { color: "#324238", fontSize: 14, ...font("800"), lineHeight: 20 },
   emptyText: { color: "#657168", fontSize: 12, lineHeight: 18 },
   moreText: { color: "#657168", fontSize: 10, lineHeight: 15, textAlign: "center" },
 });

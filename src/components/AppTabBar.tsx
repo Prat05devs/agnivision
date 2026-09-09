@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { selectionHaptic } from "../services/haptics";
 import type { AppTab } from "../store/useAppStore";
+import { font } from "../theme/typography";
 
 type TabBarProps = {
   activeTab: AppTab;
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
   },
   tabSelected: { backgroundColor: "#E2ECE5" },
   tabPressed: { opacity: 0.65 },
-  glyph: { color: "#3F4942", fontSize: 20, fontWeight: "800", lineHeight: 22 },
-  label: { color: "#3F4942", fontSize: 9, fontWeight: "700", letterSpacing: 0.5 },
+  glyph: { color: "#3F4942", fontSize: 20, ...font("800"), lineHeight: 22 },
+  label: { color: "#3F4942", fontSize: 9, ...font("700"), letterSpacing: 0.5 },
   textSelected: { color: "#003E2C" },
 });

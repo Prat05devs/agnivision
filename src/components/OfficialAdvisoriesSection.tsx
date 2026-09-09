@@ -4,6 +4,7 @@ import { useAdvisoryStore } from "../store/useAdvisoryStore";
 import type { OfficialAdvisory } from "../types/advisory";
 import { advisoryFreshness } from "../utils/advisory";
 import { AdvisoryCard } from "./AdvisoryCard";
+import { font } from "../theme/typography";
 
 export function OfficialAdvisoriesSection({ advisories, emptyCopy = "No active official advisories for your selected area." }: { advisories?: OfficialAdvisory[]; emptyCopy?: string }) {
   const all = useAdvisoryStore((state) => state.advisories);
@@ -26,4 +27,4 @@ export function OfficialAdvisoriesSection({ advisories, emptyCopy = "No active o
   );
 }
 
-const styles = StyleSheet.create({ section: { gap: 10 }, heading: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" }, title: { color: "#1A2A1E", fontSize: 17, fontWeight: "800" }, freshness: { color: "#7A857D", fontSize: 10, marginTop: 3 }, seeAll: { color: "#17633A", fontSize: 13, fontWeight: "800" }, notice: { alignItems: "center", backgroundColor: "#FFF4E3", borderRadius: 13, flexDirection: "row", gap: 10, padding: 12 }, noticeCopy: { flex: 1 }, noticeText: { color: "#754E12", fontSize: 11, lineHeight: 16 }, retryButton: { backgroundColor: "#7D4B00", borderRadius: 9, paddingHorizontal: 11, paddingVertical: 8 }, retryText: { color: "#FFFFFF", fontSize: 10, fontWeight: "900" }, empty: { backgroundColor: "#F1F4F2", borderRadius: 15, gap: 4, padding: 15 }, emptyTitle: { color: "#35463B", fontSize: 13, fontWeight: "800", lineHeight: 18 }, emptyBody: { color: "#69756D", fontSize: 11, lineHeight: 16 } });
+const styles = StyleSheet.create({ section: { gap: 10 }, heading: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" }, title: { color: "#1A2A1E", fontSize: 17, ...font("800") }, freshness: { color: "#7A857D", fontSize: 10, marginTop: 3 }, seeAll: { color: "#17633A", fontSize: 13, ...font("800") }, notice: { alignItems: "center", backgroundColor: "#FFF4E3", borderRadius: 13, flexDirection: "row", gap: 10, padding: 12 }, noticeCopy: { flex: 1 }, noticeText: { color: "#754E12", fontSize: 11, lineHeight: 16 }, retryButton: { backgroundColor: "#7D4B00", borderRadius: 9, paddingHorizontal: 11, paddingVertical: 8 }, retryText: { color: "#FFFFFF", fontSize: 10, ...font("900") }, empty: { backgroundColor: "#F1F4F2", borderRadius: 15, gap: 4, padding: 15 }, emptyTitle: { color: "#35463B", fontSize: 13, ...font("800"), lineHeight: 18 }, emptyBody: { color: "#69756D", fontSize: 11, lineHeight: 16 } });

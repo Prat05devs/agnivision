@@ -13,6 +13,13 @@ type DestinationImage = {
 
 const destinationImages = destinationImageData as Record<string, DestinationImage[]>;
 
+// Wikimedia rejects requests that carry a generic client User-Agent (Android's
+// image loader sends "okhttp/..."), so every gallery fetch must identify the app.
+// https://foundation.wikimedia.org/wiki/Policy:User-Agent_policy
+const WIKIMEDIA_HEADERS = {
+  "User-Agent": "AgniVision.live/1.0.0 (https://agnivision.live; contact@agnivision.live)",
+};
+
 export function DestinationImageSlider({ destination }: { destination: Destination }) {
   const { width: windowWidth } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -44,7 +51,7 @@ export function DestinationImageSlider({ destination }: { destination: Destinati
             accessibilityLabel={`${destination.name} photo ${index + 1} of ${images.length}`}
             onError={() => setFailedImages((current) => current.includes(item.uri) ? current : [...current, item.uri])}
             resizeMode="cover"
-            source={{ uri: item.uri }}
+            source={{ headers: WIKIMEDIA_HEADERS, uri: item.uri }}
             style={{ height, width }}
           />
         )}

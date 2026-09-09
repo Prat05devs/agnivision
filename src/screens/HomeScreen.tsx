@@ -10,6 +10,7 @@ import { UttarakhandUpdatesSection } from "../components/UttarakhandUpdatesSecti
 import { errorHaptic, selectionHaptic, successHaptic, warningHaptic } from "../services/haptics";
 import { useAppStore } from "../store/useAppStore";
 import { filterDetectionsByTime, formatDistanceKm, haversineDistanceKm } from "../utils/fire";
+import { font } from "../theme/typography";
 
 export function HomeScreen() {
   const detections = useAppStore((state) => state.detections);
@@ -178,23 +179,23 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   content: { alignSelf: "center", backgroundColor: "#F8F9FC", gap: 18, maxWidth: 760, padding: 20, paddingBottom: 32, width: "100%" },
   contextHeader: { gap: 8 },
-  date: { color: "#556159", fontSize: 11, fontWeight: "800", letterSpacing: 1.2 },
+  date: { color: "#556159", fontSize: 11, ...font("800"), letterSpacing: 1.2 },
   areaRow: { alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" },
   areaCopy: { flex: 1 },
-  areaTitle: { color: "#101E31", fontSize: 27, fontWeight: "800", letterSpacing: -0.7 },
+  areaTitle: { color: "#101E31", fontSize: 27, ...font("800"), letterSpacing: -0.7 },
   areaSubtitle: { color: "#68736C", fontSize: 11, marginTop: 3 },
   searchButton: { alignItems: "center", backgroundColor: "#DDE9FA", borderRadius: 14, height: 44, justifyContent: "center", width: 44 },
-  searchText: { color: "#073B2A", fontSize: 24, fontWeight: "800" },
+  searchText: { color: "#073B2A", fontSize: 24, ...font("800") },
   pressed: { opacity: 0.72 },
   tourismCard: { alignItems: "center", backgroundColor: "#FF8708", borderRadius: 17, flexDirection: "row", gap: 12, padding: 15 },
   tourismIcon: { alignItems: "center", backgroundColor: "rgba(148,69,0,0.16)", borderRadius: 13, height: 48, justifyContent: "center", width: 48 },
-  tourismIconText: { color: "#6D3500", fontSize: 23, fontWeight: "800" },
+  tourismIconText: { color: "#6D3500", fontSize: 23, ...font("800") },
   tourismCopy: { flex: 1, gap: 3 },
-  tourismTitle: { color: "#4E2B00", fontSize: 15, fontWeight: "900" },
+  tourismTitle: { color: "#4E2B00", fontSize: 15, ...font("900") },
   tourismText: { color: "#563700", fontSize: 11, lineHeight: 16 },
-  tourismArrow: { color: "#5C3300", fontSize: 24, fontWeight: "800" },
+  tourismArrow: { color: "#5C3300", fontSize: 24, ...font("800") },
   section: { gap: 10 },
-  sectionTitle: { color: "#1A2A1E", fontSize: 17, fontWeight: "800", letterSpacing: -0.2 },
+  sectionTitle: { color: "#1A2A1E", fontSize: 17, ...font("800"), letterSpacing: -0.2 },
   sectionCopy: { color: "#66736B", fontSize: 12, lineHeight: 18 },
   locationCard: {
     alignItems: "center",
@@ -206,13 +207,13 @@ const styles = StyleSheet.create({
   },
   locationCopy: { flex: 1, gap: 4 },
   locationTitleRow: { alignItems: "center", flexDirection: "row", gap: 6 },
-  locationTitle: { color: "#1B3823", fontSize: 14, fontWeight: "800" },
+  locationTitle: { color: "#1B3823", fontSize: 14, ...font("800") },
   locationActiveDot: { backgroundColor: "#22A35A", borderRadius: 4, height: 7, width: 7 },
   locationText: { color: "#587060", fontSize: 12, lineHeight: 17 },
   locationButton: { backgroundColor: "#14532D", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
-  locationButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
+  locationButtonText: { color: "#FFFFFF", fontSize: 12, ...font("800") },
   locationError: { color: "#8B1E17", fontSize: 12, lineHeight: 18, marginTop: -10 },
   note: { borderTopColor: "#DFE6E0", borderTopWidth: 1, gap: 5, marginTop: 4, paddingTop: 16 },
-  noteTitle: { color: "#324238", fontSize: 13, fontWeight: "800" },
+  noteTitle: { color: "#324238", fontSize: 13, ...font("800") },
   noteText: { color: "#657168", fontSize: 12, lineHeight: 18 },
 });

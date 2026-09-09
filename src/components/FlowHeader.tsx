@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { font } from "../theme/typography";
 
 type FlowHeaderProps = {
   eyebrow: string;
@@ -26,8 +27,8 @@ export function FlowHeader({ eyebrow, title, onBack }: FlowHeaderProps) {
 const styles = StyleSheet.create({
   header: { alignItems: "center", backgroundColor: "#F8F9FC", borderBottomColor: "#E8EBF1", borderBottomWidth: 1, flexDirection: "row", gap: 10, paddingBottom: 12 },
   backButton: { alignItems: "center", backgroundColor: "#EDF4EE", borderRadius: 12, height: 40, justifyContent: "center", width: 40 },
-  backGlyph: { color: "#185F35", fontSize: 34, fontWeight: "400", lineHeight: 36, marginTop: -4 },
+  backGlyph: { color: "#185F35", fontSize: 34, ...font("400"), lineHeight: 36, marginTop: -4 },
   copy: { flex: 1, minWidth: 72 },
-  eyebrow: { color: "#17633A", fontSize: 10, fontWeight: "800", letterSpacing: 1.2 },
-  title: { color: "#073B2A", fontSize: 21, fontWeight: "800", letterSpacing: -0.5, marginTop: 2 },
+  eyebrow: { color: "#17633A", fontSize: 10, ...font("800"), letterSpacing: 1.2 },
+  title: { color: "#073B2A", fontSize: 21, ...font("800"), letterSpacing: -0.5, marginTop: 2 },
 });

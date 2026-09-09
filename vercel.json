@@ -1,0 +1,29 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": null,
+  "outputDirectory": "vercel-public",
+  "functions": {
+    "api/fire-detections.ts": {
+      "maxDuration": 15
+    },
+    "api/places.ts": {
+      "maxDuration": 10
+    },
+    "api/detection-areas.ts": {
+      "maxDuration": 10
+    },
+    "api/advisories.ts": {
+      "maxDuration": 60
+    },
+    "api/notification-dispatch.ts": {
+      "maxDuration": 60
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/notification-dispatch",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}

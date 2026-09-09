@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AgnivisionLogo } from "./AgnivisionLogo";
+import { font } from "../theme/typography";
 
 type AgniVisionBrandProps = {
   compact?: boolean;
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
   staticBrand: { alignSelf: "flex-start" },
   content: { alignItems: "center", flexDirection: "row", gap: 10, minWidth: 0 },
   contentCompact: { gap: 8 },
-  wordmark: { color: "#073B2A", flexShrink: 1, fontSize: 22, fontWeight: "900", letterSpacing: -0.55 },
+  wordmark: { color: "#073B2A", flexShrink: 1, fontSize: 22, ...font("900"), letterSpacing: -0.55 },
   wordmarkCompact: { fontSize: 18, letterSpacing: -0.35 },
   wordmarkInverse: { color: "#FFFFFF" },
   pressed: { opacity: 0.65 },

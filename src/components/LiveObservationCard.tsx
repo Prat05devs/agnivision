@@ -9,6 +9,7 @@ import {
   formatPublicObservationType,
   formatRelativeObservationTime,
 } from "../utils/fire";
+import { font } from "../theme/typography";
 
 const ROTATION_INTERVAL_MS = 10_000;
 
@@ -142,23 +143,23 @@ const styles = StyleSheet.create({
   topRow: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
   feedLabel: { alignItems: "center", flexDirection: "row", gap: 7 },
   feedDot: { backgroundColor: "#72DB8B", borderRadius: 4, height: 8, width: 8 },
-  overline: { color: "#B9E4C3", fontSize: 10, fontWeight: "800", letterSpacing: 1.2 },
-  position: { color: "#A9DAB5", fontSize: 11, fontWeight: "800" },
-  region: { color: "#FFFFFF", fontSize: 27, fontWeight: "800", letterSpacing: -0.7, lineHeight: 33 },
-  regionBasis: { color: "#9FD0AA", fontSize: 9, fontWeight: "700", letterSpacing: 0.4, marginTop: 2, textTransform: "uppercase" },
-  relativeTime: { color: "#D9F0DF", fontSize: 14, fontWeight: "800", marginTop: 7 },
+  overline: { color: "#B9E4C3", fontSize: 10, ...font("800"), letterSpacing: 1.2 },
+  position: { color: "#A9DAB5", fontSize: 11, ...font("800") },
+  region: { color: "#FFFFFF", fontSize: 27, ...font("800"), letterSpacing: -0.7, lineHeight: 33 },
+  regionBasis: { color: "#9FD0AA", fontSize: 9, ...font("700"), letterSpacing: 0.4, marginTop: 2, textTransform: "uppercase" },
+  relativeTime: { color: "#D9F0DF", fontSize: 14, ...font("800"), marginTop: 7 },
   observationTime: { color: "#B9DCC1", fontSize: 11, marginTop: 3 },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 13 },
   tag: { backgroundColor: "rgba(255,255,255,0.12)", borderRadius: 12, paddingHorizontal: 9, paddingVertical: 6 },
-  tagText: { color: "#E9F7EC", fontSize: 10, fontWeight: "700" },
-  coordinates: { color: "#A9DAB5", fontSize: 10, fontWeight: "700", marginTop: 9 },
+  tagText: { color: "#E9F7EC", fontSize: 10, ...font("700") },
+  coordinates: { color: "#A9DAB5", fontSize: 10, ...font("700"), marginTop: 9 },
   detailButton: { alignItems: "center", alignSelf: "stretch", backgroundColor: "#FFFFFF", borderRadius: 12, flexDirection: "row", justifyContent: "space-between", marginTop: 15, padding: 13 },
-  detailButtonText: { color: "#14532D", fontSize: 12, fontWeight: "800" },
+  detailButtonText: { color: "#14532D", fontSize: 12, ...font("800") },
   pressed: { opacity: 0.72 },
   emptyState: { flex: 1, gap: 7, justifyContent: "center", minHeight: 150 },
-  emptyTitle: { color: "#FFFFFF", fontSize: 24, fontWeight: "800", letterSpacing: -0.5 },
+  emptyTitle: { color: "#FFFFFF", fontSize: 24, ...font("800"), letterSpacing: -0.5 },
   emptyCopy: { color: "#D9F0DF", fontSize: 13, lineHeight: 19 },
   footer: { alignItems: "center", borderTopColor: "rgba(255,255,255,0.14)", borderTopWidth: 1, flexDirection: "row", justifyContent: "space-between", paddingTop: 12 },
-  total: { color: "#B9DCC1", flex: 1, fontSize: 10, fontWeight: "700" },
-  mapLink: { color: "#FFFFFF", fontSize: 11, fontWeight: "800", textDecorationLine: "underline" },
+  total: { color: "#B9DCC1", flex: 1, fontSize: 10, ...font("700") },
+  mapLink: { color: "#FFFFFF", fontSize: 11, ...font("800"), textDecorationLine: "underline" },
 });

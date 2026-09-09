@@ -12,6 +12,7 @@ import { errorHaptic, successHaptic, warningHaptic } from "../services/haptics";
 import { useAppStore } from "../store/useAppStore";
 import { formatConfidence, formatObservationTime, formatSensor } from "../utils/fire";
 import { intensityLabel } from "../utils/intensity";
+import { font } from "../theme/typography";
 
 type ShareAction = "location" | "image" | "save" | null;
 
@@ -228,30 +229,30 @@ const styles = StyleSheet.create({
   content: { alignSelf: "center", gap: 16, maxWidth: 760, padding: 20, paddingTop: 18, width: "100%" },
   locationAction: { alignItems: "center", backgroundColor: "#17633A", borderRadius: 13, flexDirection: "row", justifyContent: "space-between", padding: 14 },
   locationActionBody: { flex: 1, paddingRight: 12 },
-  locationActionText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
+  locationActionText: { color: "#FFFFFF", fontSize: 13, ...font("800") },
   locationActionCopy: { color: "#CDE6D3", fontSize: 10, marginTop: 3 },
-  locationActionGlyph: { color: "#FFFFFF", fontSize: 24, fontWeight: "800" },
+  locationActionGlyph: { color: "#FFFFFF", fontSize: 24, ...font("800") },
   imageActions: { flexDirection: "row", gap: 9 },
   primaryAction: { alignItems: "center", backgroundColor: "#E8F2EA", borderRadius: 13, flex: 1, flexDirection: "row", justifyContent: "space-between", padding: 14 },
-  primaryActionText: { color: "#17633A", fontSize: 12, fontWeight: "800" },
+  primaryActionText: { color: "#17633A", fontSize: 12, ...font("800") },
   secondaryAction: { alignItems: "center", backgroundColor: "#E8F2EA", borderRadius: 13, flex: 1, justifyContent: "center", padding: 14 },
-  secondaryActionText: { color: "#17633A", fontSize: 12, fontWeight: "800" },
+  secondaryActionText: { color: "#17633A", fontSize: 12, ...font("800") },
   disabled: { opacity: 0.55 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   detail: { backgroundColor: "#FFFFFF", borderColor: "#E4EAE5", borderRadius: 13, borderWidth: 1, flexGrow: 1, gap: 4, minWidth: "47%", padding: 13 },
-  detailLabel: { color: "#77837B", fontSize: 9, fontWeight: "800", letterSpacing: 0.9 },
-  detailValue: { color: "#223226", fontSize: 13, fontWeight: "800" },
+  detailLabel: { color: "#77837B", fontSize: 9, ...font("800"), letterSpacing: 0.9 },
+  detailValue: { color: "#223226", fontSize: 13, ...font("800") },
   sourceDisclosure: { backgroundColor: "#FFFFFF", borderColor: "#E4EAE5", borderRadius: 15, borderWidth: 1, overflow: "hidden" },
   sourceButton: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", minHeight: 58, padding: 14 },
-  sourceButtonTitle: { color: "#24372A", fontSize: 13, fontWeight: "800" },
+  sourceButtonTitle: { color: "#24372A", fontSize: 13, ...font("800") },
   sourceButtonCopy: { color: "#728078", fontSize: 10, marginTop: 3 },
-  sourceButtonGlyph: { color: "#17633A", fontSize: 23, fontWeight: "700" },
+  sourceButtonGlyph: { color: "#17633A", fontSize: 23, ...font("700") },
   sourceContent: { borderTopColor: "#E8EDE9", borderTopWidth: 1, gap: 12, padding: 14 },
   sourceIntro: { color: "#5F6E64", fontSize: 12, lineHeight: 18 },
   pressed: { opacity: 0.72 },
   note: { backgroundColor: "#F2F6F3", borderRadius: 14, gap: 5, padding: 15 },
-  noteTitle: { color: "#3B4C41", fontSize: 13, fontWeight: "800" },
+  noteTitle: { color: "#3B4C41", fontSize: 13, ...font("800") },
   noteText: { color: "#65736A", fontSize: 12, lineHeight: 18 },
   missing: { padding: 20 },
-  missingTitle: { color: "#35463B", fontSize: 16, fontWeight: "800", lineHeight: 23 },
+  missingTitle: { color: "#35463B", fontSize: 16, ...font("800"), lineHeight: 23 },
 });

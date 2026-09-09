@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Assets that JavaScript pulls in with require() have no reference anywhere in the
+  Kotlin/Java sources, so the resource shrinker cannot see them. They currently
+  survive only because its safe-mode heuristic matches the "public" string constant
+  in the bundle — a coincidence of the asset folder's name, not a real reference.
+  Naming them here makes them explicitly reachable so a rename cannot silently strip
+  a marker or logo from a release build.
+
+  Keep this in sync with require()d image assets: see FireMapMarker.tsx and
+  AgnivisionLogo.tsx.
+-->
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/public_markermap,@drawable/public_agnivisionlogo"
+    tools:shrinkMode="safe" />
