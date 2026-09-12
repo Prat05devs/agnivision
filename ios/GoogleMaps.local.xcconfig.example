@@ -1,0 +1,3 @@
+// Copy this file to GoogleMaps.local.xcconfig and supply the iOS-restricted
+// Google Maps key. The local file is ignored by Git.
+GOOGLE_MAPS_API_KEY_IOS = YOUR_IOS_RESTRICTED_GOOGLE_MAPS_KEY

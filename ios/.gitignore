@@ -22,6 +22,7 @@ DerivedData
 *.xcuserstate
 project.xcworkspace
 .xcode.env.local
+GoogleMaps.local.xcconfig
 
 # Bundle artifacts
 *.jsbundle
