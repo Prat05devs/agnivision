@@ -1,9 +1,7 @@
-import { useState } from "react";
-import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FlowHeader } from "../components/FlowHeader";
-import { scheduleTestNotification } from "../notifications/notificationService";
 import { useAppStore } from "../store/useAppStore";
 import { useNotificationStore } from "../store/useNotificationStore";
 import type { MinimumNotificationSeverity, NotificationPreferences } from "../types/notification";
@@ -24,7 +22,6 @@ function hourLabel(hour: number) {
 }
 
 export function NotificationSettingsScreen() {
-  const [testPending, setTestPending] = useState(false);
   const insets = useSafeAreaInsets();
   const closeOverlay = useAppStore((state) => state.closeOverlay);
   const preferences = useNotificationStore((state) => state.preferences);
@@ -42,24 +39,6 @@ export function NotificationSettingsScreen() {
 
   const updateQuietHours = (patch: Partial<NotificationPreferences["quietHours"]>) =>
     updatePreferences({ quietHours: { ...preferences.quietHours, ...patch } });
-
-  const sendTestNotification = async () => {
-    if (permission === "denied") {
-      await Linking.openSettings();
-      return;
-    }
-
-    setTestPending(true);
-    try {
-      await scheduleTestNotification();
-      await useNotificationStore.getState().refreshPermissionStates();
-      Alert.alert("Test scheduled", "A notification will appear in about 3 seconds. You can leave the app open or send it to the background.");
-    } catch (testError) {
-      Alert.alert("Could not send test", testError instanceof Error ? testError.message : "Please try again.");
-    } finally {
-      setTestPending(false);
-    }
-  };
 
   const locationCopy =
     locationPermission === "always"
@@ -81,17 +60,6 @@ export function NotificationSettingsScreen() {
         />
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
-
-        <Section title="Test notifications" body="Runs entirely on this device, so it also works when the notification server is unavailable.">
-          <View style={styles.testStatus}>
-            <View style={[styles.statusDot, permission === "granted" && styles.statusDotGranted]} />
-            <Text style={styles.testStatusText}>{permission === "granted" ? "Device permission granted" : permission === "denied" ? "Permission blocked in device settings" : "Permission not granted yet"}</Text>
-          </View>
-          <Pressable disabled={testPending} onPress={() => void sendTestNotification()} style={({ pressed }) => [styles.primaryButton, (pressed || testPending) && styles.buttonPressed]}>
-            <Text style={styles.primaryButtonText}>{testPending ? "Scheduling…" : permission === "denied" ? "Open notification settings" : "Send test notification"}</Text>
-          </Pressable>
-          <Text style={styles.testHint}>The alert should arrive after 3 seconds and appear in the notification inbox.</Text>
-        </Section>
 
         <Section title="Proximity alerts" body={locationCopy}>
           <SettingSwitch
@@ -216,11 +184,5 @@ const styles = StyleSheet.create({
   hourValue: { color: "#24372A", fontSize: 11, ...font("800") },
   empty: { color: "#6A776E", fontSize: 12, lineHeight: 18 },
   error: { backgroundColor: "#FCEDEB", borderRadius: 12, color: "#8C2E27", fontSize: 12, lineHeight: 18, padding: 12 },
-  testStatus: { alignItems: "center", flexDirection: "row", gap: 8 },
-  statusDot: { backgroundColor: "#B56B24", borderRadius: 5, height: 10, width: 10 },
-  statusDotGranted: { backgroundColor: "#2F7D45" },
-  testStatusText: { color: "#536159", flex: 1, fontSize: 12, ...font("700") },
-  testHint: { color: "#748078", fontSize: 11, lineHeight: 16 },
-  buttonPressed: { opacity: 0.7 },
   footnote: { color: "#748078", fontSize: 11, lineHeight: 17, textAlign: "center" },
 });

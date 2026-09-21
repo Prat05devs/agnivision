@@ -92,43 +92,6 @@ export async function requestNotificationPermission() {
   return getNotificationPermissionState();
 }
 
-export async function scheduleTestNotification() {
-  await configureNotificationCategories();
-  let permission = await getNotificationPermissionState();
-  if (permission !== "granted") {
-    permission = await requestNotificationPermission();
-  }
-  if (permission !== "granted") {
-    throw new Error("Notifications are blocked. Enable them in device settings, then try again.");
-  }
-
-  const createdAtUtc = new Date().toISOString();
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: "AgniVision notification test",
-      body: "Notifications are configured correctly on this device.",
-      data: {
-        inboxEntry: {
-          id: `notification-test-${Date.now()}`,
-          category: "system",
-          severity: "info",
-          title: "AgniVision notification test",
-          body: "Notifications are configured correctly on this device.",
-          createdAtUtc,
-          delivery: "pushed",
-          readAtUtc: null,
-          target: {},
-        },
-      },
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: 3,
-      channelId: NOTIFICATION_CHANNELS.system,
-    },
-  });
-}
-
 export async function getExpoPushToken() {
   const projectId =
     Constants.easConfig?.projectId ??

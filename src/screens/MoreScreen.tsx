@@ -45,7 +45,7 @@ export function MoreScreen() {
             />
           </View>
           <Divider />
-          <SettingsRow icon="⚙︎" title="Notification preferences" body="Nearby alerts, watches, quiet hours, and testing" onPress={openSettings} />
+          <SettingsRow icon="⚙︎" title="Notification preferences" body="Nearby alerts, watches, and quiet hours" onPress={openSettings} />
           <Divider />
           <SettingsRow icon="▤" title="Notification inbox" body={unread ? `${unread} unread update${unread === 1 ? "" : "s"}` : "No unread updates"} badge={unread || undefined} onPress={openInbox} />
         </View>
