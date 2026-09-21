@@ -204,12 +204,12 @@ review. These are the pages to build.
 | Page | Required by | Must contain |
 | --- | --- | --- |
 | **Landing / Home** | — | Product explainer, features, screenshots, store badges, disclaimer, footer links |
-| **Privacy Policy** | ✅ Play + App Store (hard blocker) | Everything in §8. Must be a public URL, no login, and live *before* store submission |
+| **Privacy Policy** | Play + App Store (hard blocker) | Everything in §8. Must be a public URL, no login, and live *before* store submission |
 | **Terms of Service** | Strongly recommended | Disclaimer of warranties, "not an emergency service", acceptable use, limitation of liability, governing law |
-| **Support / Contact** | ✅ Play requires a support contact | Working email address, expected response time |
-| **Data Deletion** | ✅ Play (must be reachable, and linkable from the store listing) | How to delete stored data, what deletion covers, how long it takes. See §8.6 and the ⚠️ gap in §12 |
+| **Support / Contact** | Play requires a support contact | Working email address, expected response time |
+| **Data Deletion** | Play (must be reachable, and linkable from the store listing) | How to delete stored data, what deletion covers, how long it takes. See §8.6 and §12 item 7 |
 | **About** | Recommended | Who builds it, why, data philosophy |
-| **Attributions / Data Sources** | ✅ Licence condition | Everything in §6 |
+| **Attributions / Data Sources** | Licence condition | Everything in §6 |
 
 Recommended footer on every page: Privacy · Terms · Data Deletion · Support ·
 Attributions · the §5 disclaimer line.
@@ -302,14 +302,14 @@ service when enabled), acting as processors.
 - Location: *Approximate location*, collected, **not** shared, optional, used for App
   functionality. Note it is transmitted and encrypted in transit.
 - Device or other IDs: the installation ID, collected, not shared, App functionality.
-- Data is encrypted in transit ✅
-- Users can request deletion ⚠️ — see the gap in §12
-- No data collected for advertising or analytics ✅
+- Data is encrypted in transit
+- Users can request deletion — email-based process, see §12 item 7
+- No data collected for advertising or analytics
 
 **Apple App Privacy ("nutrition label")** — expect:
 - Coarse Location → App Functionality → **Not Linked to Identity**
 - Identifiers (installation ID) → App Functionality → **Not Linked to Identity**
-- **Not used for tracking** ✅
+- **Not used for tracking**
 
 **Also required before submission**
 - Privacy policy URL, publicly reachable, no login
@@ -357,12 +357,13 @@ These block the legal pages. The code cannot answer them and they must not be gu
    requirements around a named contact. Confirm applicability with counsel.
 5. **Minimum age** for §8.7.
 6. **Emergency numbers** to publish (§5).
-7. **Full data-deletion path — GAP.** The app currently exposes deletion of *stored
-   location* only. There is **no endpoint that deletes an installation's full record**
-   (preferences, watches, inbox). Play expects a reachable deletion route. Either build
-   that endpoint, or publish an email-based deletion process with a stated SLA and a
-   documented manual procedure. **I recommend building the endpoint** — an email
-   process is a standing manual obligation.
+7. **Full data-deletion path — handled by an email-based process.** The app exposes
+   deletion of *stored location* only; there is still no endpoint that deletes an
+   installation's full record (preferences, watches, inbox). The published route is
+   therefore the support email. Keep the address and the stated SLA on the site
+   identical to what the privacy policy claims, and keep a documented manual procedure
+   for carrying the deletion out. This remains a standing manual obligation; building
+   `DELETE /api/notification-device` would retire it.
 8. **Server-side notification storage is not currently provisioned.** The API needs
    `UPSTASH_REDIS_REST_URL` / `_TOKEN` (or `KV_REST_API_*`). Until set, device
    registration fails and nothing is stored server-side. This *narrows* what the
