@@ -1,5 +1,5 @@
 import type { Coordinate } from "../src/types/fire";
-import { authenticateDevice, isResponse, json } from "./_notificationHttp";
+import { authenticateDevice, isResponse, json, rateLimited } from "./_notificationHttp";
 import { saveDevice } from "./_notificationStore";
 
 function isCoordinate(value: unknown): value is Coordinate {
@@ -12,6 +12,8 @@ export default {
   async fetch(request: Request) {
     if (request.method === "OPTIONS") return json({}, 204);
     if (request.method !== "POST" && request.method !== "DELETE") return json({ error: "Method not allowed." }, 405);
+    const limited = rateLimited(request, "device");
+    if (limited) return limited;
     try {
       const device = await authenticateDevice(request);
       if (isResponse(device)) return device;

@@ -17,13 +17,22 @@ test("device registration creates a protected record and rejects a different sec
     const [operation, key, ...args] = JSON.parse(String(init?.body)) as string[];
     let result: unknown = null;
     if (operation === "EVAL") {
-      const [, recordKey, setKey, raw, fieldsJson, id] = args;
-      const incoming = JSON.parse(raw!);
-      const current = values.has(recordKey!) ? JSON.parse(values.get(recordKey!)!) : null;
-      if (current && current.secretHash !== incoming.secretHash) result = 0;
-      else {
-        for (const field of JSON.parse(fieldsJson!)) if (current) current[field] = incoming[field];
-        values.set(recordKey!, JSON.stringify(current ?? incoming));
+      // Mirrors SAVE_DEVICE_SCRIPT. The merge now happens in JS and the script stores
+      // the caller's document verbatim, so this stand-in must never re-serialise it:
+      // the previous version round-tripped through JSON.parse/stringify, which is
+      // exactly why it could not reproduce Redis turning `watches: []` into `{}`.
+      const [, recordKey, setKey, document, id, expected] = args;
+      const raw = values.get(recordKey!) ?? null;
+      if (raw !== null) {
+        const current = JSON.parse(raw);
+        const incoming = JSON.parse(document!);
+        if (current.secretHash !== incoming.secretHash) result = 0;
+        else if (expected === "" || raw !== expected) result = 2;
+      } else if (expected !== "") {
+        result = 2;
+      }
+      if (result === null) {
+        values.set(recordKey!, document!);
         const members = sets.get(setKey!) ?? new Set<string>();
         members.add(id!); sets.set(setKey!, members); result = 1;
       }

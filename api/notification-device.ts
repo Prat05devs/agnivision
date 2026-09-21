@@ -1,7 +1,7 @@
 import type { Coordinate } from "../src/types/fire";
 import type { NotificationPreferences, WatchedDestination } from "../src/types/notification";
 import { DEFAULT_NOTIFICATION_PREFERENCES } from "../src/types/notification";
-import { json } from "./_notificationHttp";
+import { json, rateLimited } from "./_notificationHttp";
 import {
   deviceSecretMatches,
   getDevice,
@@ -51,6 +51,8 @@ export default {
   async fetch(request: Request) {
     if (request.method === "OPTIONS") return json({}, 204);
     if (request.method !== "POST") return json({ error: "Method not allowed." }, 405);
+    const limited = rateLimited(request, "registration");
+    if (limited) return limited;
 
     try {
       const installationId = request.headers.get("X-Agnivision-Installation") ?? "";

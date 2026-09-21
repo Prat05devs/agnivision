@@ -1,4 +1,16 @@
+import { createRateLimit } from "./_requestLimits";
 import { getDevice, deviceSecretMatches, type DeviceRecord } from "./_notificationStore";
+
+// These endpoints were previously unlimited. Registration in particular is
+// trust-on-first-use, so an unlimited caller could mint device records indefinitely —
+// each one stored, and each one re-read by every dispatch run.
+const allowRegistration = createRateLimit(20);
+const allowDeviceRequest = createRateLimit(60);
+
+export function rateLimited(request: Request, kind: "registration" | "device") {
+  const allow = kind === "registration" ? allowRegistration : allowDeviceRequest;
+  return allow(request) ? null : json({ error: "Too many requests. Please wait a moment." }, 429);
+}
 
 export function json(body: unknown, status = 200) {
   return new Response(status === 204 ? null : JSON.stringify(body), {

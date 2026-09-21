@@ -220,7 +220,7 @@ Before remote delivery can work:
 2. Configure Android FCM v1 credentials, provide `google-services.json` through `GOOGLE_SERVICES_JSON`, and configure iOS APNs credentials for that EAS project. Apple delivery requires an Apple Developer account.
 3. Provision Upstash Redis and add its REST URL/token plus `CRON_SECRET` to Vercel.
 4. Deploy the API and set `EXPO_PUBLIC_NOTIFICATION_API_URL` to its `/api` root.
-5. Use a scheduler capable of calling `/api/notification-dispatch` every ten minutes. The included Vercel cron requires a plan that permits this frequency; Vercel Hobby cron is limited to once daily.
+5. Schedule `/api/notification-dispatch`. The included Vercel cron runs once daily, which is what Vercel Hobby permits. Dispatch derives its new-detection window from the time since the previous completed run (35 minutes minimum, 24 hours maximum), so any cadence delivers every new detection exactly once — the cadence sets *latency*, not correctness. On a daily schedule, destination-watch and advisory alerts can arrive up to a day late; for near-real-time delivery use `*/10 * * * *`, which needs a Vercel Pro plan or an external scheduler. Proximity alerts do not depend on this: they are also evaluated on the device.
 6. Create a new native development/release build when ready. Expo Go on Android cannot receive remote push notifications.
 
 See `NOTIFICATION_IMPLEMENTATION.md` for architecture, privacy behavior, and verification details.

@@ -1,10 +1,12 @@
-import { authenticateDevice, isResponse, json } from "./_notificationHttp";
+import { authenticateDevice, isResponse, json, rateLimited } from "./_notificationHttp";
 import { getInbox, markInboxRead } from "./_notificationStore";
 
 export default {
   async fetch(request: Request) {
     if (request.method === "OPTIONS") return json({}, 204);
     if (request.method !== "GET" && request.method !== "PATCH") return json({ error: "Method not allowed." }, 405);
+    const limited = rateLimited(request, "device");
+    if (limited) return limited;
     try {
       const device = await authenticateDevice(request);
       if (isResponse(device)) return device;

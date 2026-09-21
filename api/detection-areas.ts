@@ -11,6 +11,7 @@ import {
 type CachedArea = { area: DetectionArea | null; expiresAt: number };
 
 const MAX_POINTS = 12;
+const MAX_PENDING_AREAS = 24;
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const areaCache = new Map<string, CachedArea>();
 const consumeRateLimit = createRateLimit(60);
@@ -97,10 +98,18 @@ export default {
         return json({ error: "Too many area lookups. Please wait a moment." }, 429);
       }
 
+      // The capacity check happens before any lookup is created. Throwing from inside
+      // the map aborted it part-way, leaving already-created promises with nothing
+      // awaiting them: one upstream failure then surfaced as an unhandled rejection,
+      // which terminates the long-running server process.
+      const newCells = missing.filter(([cell]) => !pendingAreas.has(cell));
+      if (pendingAreas.size + newCells.length > MAX_PENDING_AREAS) {
+        return json({ error: "Area lookups are busy. Please retry shortly." }, 503);
+      }
+
       await Promise.all(missing.map(([cell, coordinate]) => {
         const pending = pendingAreas.get(cell);
         if (pending) return pending;
-        if (pendingAreas.size >= 24) throw new Error("Area service is busy.");
         const lookup = reverseGeocode(coordinate, geocodingKey).then((area) => {
           if (areaCache.size >= 10_000) areaCache.delete(areaCache.keys().next().value!);
           areaCache.set(cell, { area, expiresAt: Date.now() + CACHE_TTL_MS });

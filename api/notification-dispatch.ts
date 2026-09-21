@@ -19,8 +19,10 @@ import {
   acquireDispatchLock,
   appendInbox,
   getDailyRegionCount,
+  getLastDispatchAt,
   getDevice,
   getDedupSeverity,
+  getDedupSeverities,
   incrementGlobalCounter,
   isCoolingDown,
   listDevices,
@@ -32,14 +34,33 @@ import {
   rollingDeliveryCount,
   saveDevice,
   setDailyRegionCount,
+  setLastDispatchAt,
   setDedupSeverity,
+  setDedupSeverities,
   startCooldown,
   type DeviceRecord,
 } from "./_notificationStore";
 
 const MAX_GLOBAL_PUSHES_PER_DAY = 8;
 const MAX_PROXIMITY_PUSHES_PER_DAY = 5;
-const NEW_DETECTION_WINDOW_MS = 35 * 60 * 1000;
+// Which detections count as "new" is judged on acquiredAtUtc, but FIRMS near-real-time
+// data is published hours after acquisition — the newest record in the live feed is
+// routinely ~3.5 hours old. A detection acquired just before one run appears only in a
+// later one, so the window must span the gap between runs *plus* that latency. The
+// previous fixed 35-minute window was shorter than the latency alone and so rejected
+// essentially every real detection, at any cadence. Widening is safe: anything already
+// alerted on is held back by its dedup marker.
+const FIRMS_PUBLICATION_LATENCY_MS = 6 * 60 * 60 * 1000;
+// Absorbs scheduler jitter so a detection landing between two runs is not missed.
+const DETECTION_WINDOW_SLACK_MS = 5 * 60 * 1000;
+// Bounds the replay after a long outage. Must exceed the slowest supported cadence
+// (daily) plus the latency allowance, or a daily schedule would drop detections.
+const MAX_DETECTION_WINDOW_MS = 36 * 60 * 60 * 1000;
+
+export function detectionWindowMs(now: number, lastDispatchAtMs: number | null) {
+  const sinceLastRun = lastDispatchAtMs === null ? 0 : Math.max(0, now - lastDispatchAtMs);
+  return Math.min(MAX_DETECTION_WINDOW_MS, sinceLastRun + FIRMS_PUBLICATION_LATENCY_MS + DETECTION_WINDOW_SLACK_MS);
+}
 // A stationary phone may not emit another background update for several days.
 // Keep an opted-in "Always" location useful without treating it as permanent.
 const locationMaxAgeMs = { always: 7 * 24 * 60 * 60 * 1000, "while-using": 45 * 60 * 1000, off: 0 } as const;
@@ -106,14 +127,18 @@ function highestSeverity(matches: Array<{ detection: FireDetection }>): Confiden
   return matches.some(({ detection }) => getDetectionSeverity(detection) === "high") ? "high" : matches.some(({ detection }) => getDetectionSeverity(detection) === "nominal") ? "nominal" : "low";
 }
 
-async function newMatchesForDevice(device: DeviceRecord, matches: ReturnType<typeof matchingDetections>, now: Date) {
+async function newMatchesForDevice(device: DeviceRecord, matches: ReturnType<typeof matchingDetections>, now: Date, windowMs: number) {
   const selected: typeof matches = [];
   const escalations = new Set<string>();
+  const previousSeverities = await getDedupSeverities(
+    device.installationId,
+    matches.map((match) => match.detection.id),
+  );
   for (const match of matches) {
     const severity = getDetectionSeverity(match.detection);
-    const previous = await getDedupSeverity(device.installationId, match.detection.id);
+    const previous = previousSeverities.get(match.detection.id) ?? null;
     const isEscalation = previous === "nominal" && severity === "high";
-    const isRecent = Date.parse(match.detection.acquiredAtUtc) >= now.getTime() - NEW_DETECTION_WINDOW_MS;
+    const isRecent = Date.parse(match.detection.acquiredAtUtc) >= now.getTime() - windowMs;
     if ((!previous && isRecent) || isEscalation) {
       selected.push(match);
       if (isEscalation) escalations.add(match.detection.id);
@@ -122,12 +147,12 @@ async function newMatchesForDevice(device: DeviceRecord, matches: ReturnType<typ
   return { selected, escalations };
 }
 
-async function proximityEvent(device: DeviceRecord, detections: FireDetection[], now: Date): Promise<CandidateEvent | null> {
+async function proximityEvent(device: DeviceRecord, detections: FireDetection[], now: Date, windowMs: number): Promise<CandidateEvent | null> {
   const location = device.coarseLocation;
   if (!device.preferences.proximityEnabled || !location || device.locationPermission === "off") return null;
   if (Date.parse(location.updatedAtUtc) < now.getTime() - locationMaxAgeMs[device.locationPermission]) return null;
   const matches = matchingDetections(detections, location, device.preferences.proximityRadiusKm, device.preferences.minimumSeverity);
-  const { selected, escalations } = await newMatchesForDevice(device, matches, now);
+  const { selected, escalations } = await newMatchesForDevice(device, matches, now, windowMs);
   if (selected.length === 0) return null;
   const nearest = selected[0]!;
   const severity = highestSeverity(selected);
@@ -143,13 +168,13 @@ async function proximityEvent(device: DeviceRecord, detections: FireDetection[],
   };
 }
 
-async function destinationEvents(device: DeviceRecord, detections: FireDetection[], now: Date) {
+async function destinationEvents(device: DeviceRecord, detections: FireDetection[], now: Date, windowMs: number) {
   const events: CandidateEvent[] = [];
   const selectedDetectionIds = new Set<string>();
   for (const watch of device.watches) {
     const matches = matchingDetections(detections, watch.coordinate, watch.radiusKm, device.preferences.minimumSeverity)
       .filter(({ detection }) => !selectedDetectionIds.has(detection.id));
-    const { selected, escalations } = await newMatchesForDevice(device, matches, now);
+    const { selected, escalations } = await newMatchesForDevice(device, matches, now, windowMs);
     if (selected.length === 0) continue;
     selected.forEach(({ detection }) => selectedDetectionIds.add(detection.id));
     const nearest = selected[0]!;
@@ -361,11 +386,15 @@ async function deliver(device: DeviceRecord, event: CandidateEvent, now: Date) {
   }
   const entry = shouldPush ? baseEntry : { ...baseEntry, delivery: "inbox-only" as const };
   await appendInbox(device.installationId, entry);
-  await setDedupSeverity(device.installationId, event.eventId, String(event.severity));
-  if (payloadEvent.eventId !== event.eventId) {
-    await setDedupSeverity(device.installationId, payloadEvent.eventId, String(payloadEvent.severity));
-  }
-  await Promise.all(event.dedup.map((item) => setDedupSeverity(device.installationId, item.id, item.severity)));
+  // The push is sent before these markers are written, so a crash in between re-sends
+  // rather than drops. For a proximity alert a duplicate is the safer failure.
+  await setDedupSeverities(device.installationId, [
+    { id: event.eventId, severity: String(event.severity) },
+    ...(payloadEvent.eventId !== event.eventId
+      ? [{ id: payloadEvent.eventId, severity: String(payloadEvent.severity) }]
+      : []),
+    ...event.dedup.map((item) => ({ id: item.id, severity: item.severity })),
+  ]);
   if (shouldPush) {
     await Promise.all([
       startCooldown(device.installationId, event.category, cooldownSeconds[event.category]),
@@ -405,6 +434,7 @@ export default {
       const mapKey = process.env.FIRMS_MAP_KEY;
       if (!mapKey) return json({ error: "Satellite data service is not configured." }, 503);
       const now = new Date();
+      const windowMs = detectionWindowMs(now.getTime(), await getLastDispatchAt());
       const advisoryPromise = getOfficialAdvisories().catch(() => null);
       let detections: FireDetection[];
       try {
@@ -436,41 +466,64 @@ export default {
       }
       let pushed = 0;
       let logged = 0;
+      let failedDevices = 0;
 
       const activeDevices = devices.filter((device) => device.preferences.masterEnabled);
       for (let index = 0; index < activeDevices.length; index += 10) {
         const batch = await Promise.all(activeDevices.slice(index, index + 10).map(async (device) => {
           let devicePushed = 0;
           let deviceLogged = 0;
-        const proximity = await proximityEvent(device, detections, now);
-        const destinations = await destinationEvents(device, detections, now);
-        const personal = [...(proximity ? [proximity] : []), ...destinations].sort((a, b) => eventPriority(b) - eventPriority(a));
-        personal.push(...advisoryEvents(device, advisoryResponse?.advisories ?? []));
-        personal.sort((a, b) => eventPriority(b) - eventPriority(a));
-        const handledDetectionIds = new Set<string>();
-        for (const event of personal) {
-          if (event.dedup.some((item) => handledDetectionIds.has(item.id))) continue;
-          devicePushed += (await deliver(device, event, now)) ? 1 : 0;
-          deviceLogged += 1;
-          event.dedup.forEach((item) => handledDetectionIds.add(item.id));
-        }
-        if (device.preferences.regionalHotspotsEnabled) {
-          for (const event of approvedRegional) {
-            devicePushed += (await deliver(device, event, now)) ? 1 : 0;
-            deviceLogged += 1;
+          // One unusable record must not cost every other device its notifications.
+          // A single device with a malformed `watches` value used to throw here and
+          // abort the entire run.
+          try {
+            const proximity = await proximityEvent(device, detections, now, windowMs);
+            const destinations = await destinationEvents(device, detections, now, windowMs);
+            const personal = [...(proximity ? [proximity] : []), ...destinations].sort((a, b) => eventPriority(b) - eventPriority(a));
+            personal.push(...advisoryEvents(device, advisoryResponse?.advisories ?? []));
+            personal.sort((a, b) => eventPriority(b) - eventPriority(a));
+            const handledDetectionIds = new Set<string>();
+            for (const event of personal) {
+              if (event.dedup.some((item) => handledDetectionIds.has(item.id))) continue;
+              devicePushed += (await deliver(device, event, now)) ? 1 : 0;
+              deviceLogged += 1;
+              event.dedup.forEach((item) => handledDetectionIds.add(item.id));
+            }
+            if (device.preferences.regionalHotspotsEnabled) {
+              for (const event of approvedRegional) {
+                devicePushed += (await deliver(device, event, now)) ? 1 : 0;
+                deviceLogged += 1;
+              }
+            }
+            const digest = await weeklyDigestEvent(device, detections, now);
+            if (digest) {
+              devicePushed += (await deliver(device, digest, now)) ? 1 : 0;
+              deviceLogged += 1;
+            }
+            return { pushed: devicePushed, logged: deviceLogged, failed: 0 };
+          } catch (error) {
+            console.error("Device dispatch failed", {
+              installationId: device.installationId,
+              error: error instanceof Error ? error.name : "UnknownError",
+            });
+            return { pushed: devicePushed, logged: deviceLogged, failed: 1 };
           }
-        }
-        const digest = await weeklyDigestEvent(device, detections, now);
-        if (digest) {
-          devicePushed += (await deliver(device, digest, now)) ? 1 : 0;
-          deviceLogged += 1;
-        }
-          return { pushed: devicePushed, logged: deviceLogged };
         }));
         pushed += batch.reduce((sum, result) => sum + result.pushed, 0);
         logged += batch.reduce((sum, result) => sum + result.logged, 0);
+        failedDevices += batch.reduce((sum, result) => sum + result.failed, 0);
       }
-      return json({ devices: devices.length, detections: detections.length, logged, pushed });
+      // Recorded only after a completed pass. A run that threw must not narrow the next
+      // window, or the detections it failed to process would fall outside it.
+      await setLastDispatchAt(now.getTime());
+      return json({
+        devices: devices.length,
+        failedDevices,
+        detections: detections.length,
+        windowMinutes: Math.round(windowMs / 60_000),
+        logged,
+        pushed,
+      });
     } catch {
       return json({ error: "Notification dispatch failed." }, 503);
     }
