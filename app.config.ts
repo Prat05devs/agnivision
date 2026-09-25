@@ -27,7 +27,7 @@ const mapsPlugin: NonNullable<ExpoConfig["plugins"]>[number] = "react-native-map
 const config: ExpoConfig = {
   name: "AgniVision",
   slug: "agnivision",
-  version: "1.0.0",
+  version: "1.0.1",
   icon: appIcon,
   orientation: "default",
   userInterfaceStyle: "light",
@@ -75,9 +75,17 @@ const config: ExpoConfig = {
   ],
   ios: {
     bundleIdentifier: "live.agnivision.app",
+    // TestFlight already holds builds 1 and 2; App Store Connect rejects a reused
+    // build number, so this must increment on every upload.
+    buildNumber: "4",
     icon: appIcon,
     requireFullScreen: true,
     infoPlist: {
+      // The app uses only Apple-provided encryption (HTTPS via URLSession, Keychain
+      // via expo-secure-store) and implements none of its own, so it is exempt from
+      // export compliance. Declaring it here stops App Store Connect prompting for
+      // the encryption questionnaire on every single upload.
+      ITSAppUsesNonExemptEncryption: false,
       NSLocationWhenInUseUsageDescription:
         "AgniVision.live uses your location to show nearby satellite detections and enable proximity alerts you choose.",
       NSLocationAlwaysAndWhenInUseUsageDescription:
@@ -87,7 +95,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: "live.agnivision.app",
-    versionCode: 3,
+    versionCode: 4,
     adaptiveIcon: {
       foregroundImage: androidAdaptiveIcon,
       backgroundColor: "#0D121C",
