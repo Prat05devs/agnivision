@@ -6,6 +6,7 @@ import advisoriesHandler from "../api/advisories";
 import detectionAreasHandler from "../api/detection-areas";
 import fireDetectionsHandler from "../api/fire-detections";
 import notificationDeviceHandler from "../api/notification-device";
+import notificationDispatchHandler from "../api/notification-dispatch";
 import notificationInboxHandler from "../api/notification-inbox";
 import notificationLocationHandler from "../api/notification-location";
 import placesHandler from "../api/places";
@@ -18,6 +19,7 @@ const handlers = new Map([
   ["/api/detection-areas", detectionAreasHandler],
   ["/api/fire-detections", fireDetectionsHandler],
   ["/api/notification-device", notificationDeviceHandler],
+  ["/api/notification-dispatch", notificationDispatchHandler],
   ["/api/notification-inbox", notificationInboxHandler],
   ["/api/notification-location", notificationLocationHandler],
   ["/api/places", placesHandler],
@@ -139,7 +141,7 @@ server.maxRequestsPerSocket = 1_000;
 return server;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+export function startApiServer() {
 const server = createApiServer();
 const port = Number(process.env.PORT ?? DEFAULT_PORT);
 server.listen(port, "0.0.0.0", () => {
@@ -155,4 +157,9 @@ function shutdown(signal: string) {
 
 process.on("SIGINT", () => shutdown("SIGINT"));
 process.on("SIGTERM", () => shutdown("SIGTERM"));
+return server;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  startApiServer();
 }

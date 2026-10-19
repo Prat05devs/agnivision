@@ -51,12 +51,12 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-view-shot": "5.1.0",
+    "tsx": "^4.23.13",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@types/node": "^26.4.0",
     "@types/react": "~19.2.2",
-    "tsx": "^4.23.13",
     "typescript": "~6.0.3"
   }
 }
